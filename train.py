@@ -57,9 +57,6 @@ def main(args):
     loss = args.loss
     batch_size = args.batch
 
-    # get dir path containing training images
-    train_data_dir = os.path.join(input_dir, "train")
-
     # check arguments
     check_arguments(architecture, color_mode, loss)
 
@@ -206,9 +203,9 @@ if __name__ == "__main__":
         type=str,
         required=False,
         metavar="",
-        choices=["mvtecCAE", "baselineCAE", "inceptionCAE", "resnetCAE"],
+        choices=["mvtecCAE", "baselineCAE", "inceptionCAE", "resnetCAE", "skipCAE"],
         default="mvtec2",
-        help="architecture of the model to use for training: 'mvtecCAE', 'baselineCAE', 'inceptionCAE' or 'resnetCAE'",
+        help="architecture of the model to use for training: 'mvtecCAE', 'baselineCAE', 'inceptionCAE', 'resnetCAE' or 'skipCAE'",
     )
 
     parser.add_argument(
@@ -261,6 +258,6 @@ if __name__ == "__main__":
 
 # Examples of commands to initiate training with mvtec architecture
 
-# python3 train.py -d lego_test -a mvtecCAE -b 8 -l ssim -c grayscale --inspect
-# python3 train.py -d lego_test -a resnetCAE -b 8 -l mssim -c rgb --inspect
-# python3 train.py -d lego_test -a inceptionCAE -b 8 -l mssim -c rgb --inspect
+# python3 train.py -d mvtec/capsule -a mvtecCAE -b 8 -l ssim -c grayscale --inspect
+# python3 train.py -d mvtec/hazelnut -a resnetCAE -b 8 -l mssim -c rgb --inspect
+# python3 train.py -d mvtec/pill -a inceptionCAE -b 8 -l mssim -c rgb --inspect

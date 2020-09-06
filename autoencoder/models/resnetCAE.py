@@ -27,8 +27,8 @@ LR_MAX_EPOCHS = 10
 LRF_DECREASE_FACTOR = 0.85
 
 # Training parameters
-EARLY_STOPPING = 20  # 10
-REDUCE_ON_PLATEAU = 10  # 5
+EARLY_STOPPING = 10
+REDUCE_ON_PLATEAU = 5
 
 
 def build_model(color_mode):
