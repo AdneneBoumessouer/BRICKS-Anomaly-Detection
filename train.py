@@ -256,8 +256,10 @@ if __name__ == "__main__":
     logger.info("Keras version: {} ...".format(keras.__version__))
     main(args)
 
-# Examples of commands to initiate training with mvtec architecture
+# Examples of commands to initiate training with mvtec architecture LEGO_light/SV
 
-# python3 train.py -d mvtec/capsule -a mvtecCAE -b 8 -l ssim -c grayscale --inspect
-# python3 train.py -d mvtec/hazelnut -a resnetCAE -b 8 -l mssim -c rgb --inspect
-# python3 train.py -d mvtec/pill -a inceptionCAE -b 8 -l mssim -c rgb --inspect
+# python3 train.py -d LEGO_light/SV -a mvtecCAE -b 8 -l ssim -c grayscale --inspect
+# python3 train.py -d LEGO_light/SV -a baselineCAE -b 8 -l ssim -c grayscale --inspect
+# python3 train.py -d LEGO_light/SV -a inceptionCAE -b 8 -l ssim -c grayscale --inspect
+# python3 train.py -d LEGO_light/SV -a resnetCAE -b 8 -l ssim -c grayscale --inspect
+# python3 train.py -d LEGO_light/SV -a skipCAE -b 8 -l ssim -c grayscale --inspect

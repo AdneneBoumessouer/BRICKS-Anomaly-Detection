@@ -3,33 +3,27 @@ import time
 import numpy as np
 from skimage.metrics import structural_similarity as ssim
 from processing import utils
-from processing.utils import printProgressBar as printProgressBar
+from processing.utils import printProgressBar
 import matplotlib.pyplot as plt
 from skimage.util import img_as_ubyte
 from skimage.segmentation import clear_border
 from skimage.measure import label, regionprops
 from skimage.morphology import closing, square
-from skimage.color import label2rgb
-import cv2
 import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Segmentation Parameters
-
 # float + SSIM
-THRESH_MIN_FLOAT_SSIM = 0.35
+THRESH_MIN_FLOAT_SSIM = 0.20
 THRESH_STEP_FLOAT_SSIM = 0.002
-
 # float + L2
-THRESH_MIN_FLOAT_L2 = 0.01
+THRESH_MIN_FLOAT_L2 = 0.005
 THRESH_STEP_FLOAT_L2 = 0.0005
-
 # uint8 + SSIM
-THRESH_MIN_UINT8_SSIM = 90
+THRESH_MIN_UINT8_SSIM = 50
 THRESH_STEP_UINT8_SSIM = 1
-
 # uint8 + L2 (generally uneffective combination)
 THRESH_MIN_UINT8_L2 = 5
 THRESH_STEP_UINT8_L2 = 1
