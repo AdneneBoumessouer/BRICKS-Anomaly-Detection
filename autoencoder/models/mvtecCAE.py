@@ -1,3 +1,8 @@
+"""
+Implementation of mvtec architecture inspired by:
+https://github.com/cheapthrillandwine/Improving_Unsupervised_Defect_Segmentation/blob/master/Improving_AutoEncoder_Samples.ipynb
+"""
+
 import tensorflow as tf
 from tensorflow import keras
 
@@ -76,8 +81,3 @@ def build_model(color_mode):
 
     return model
 
-
-"""
-Another implementation of mvtec architecture inspired by:
-https://github.com/cheapthrillandwine/Improving_Unsupervised_Defect_Segmentation/blob/master/Improving_AutoEncoder_Samples.ipynb
-"""

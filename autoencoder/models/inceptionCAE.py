@@ -36,8 +36,8 @@ LR_MAX_EPOCHS = 10
 LRF_DECREASE_FACTOR = 0.88
 
 # Training parameters
-EARLY_STOPPING = 8  # 10
-REDUCE_ON_PLATEAU = 4  # 5
+EARLY_STOPPING = 12  # 10
+REDUCE_ON_PLATEAU = 6  # 5
 
 
 def inception_layer(x, filters):

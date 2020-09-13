@@ -107,15 +107,6 @@ def main(args):
         logger.info("reconstructing validation images...")
         imgs_val_pred = autoencoder.model.predict(imgs_val_input)
 
-        # convert to grayscale if RGB
-        if color_mode == "rgb":
-            imgs_val_input = tf.image.rgb_to_grayscale(imgs_val_input).numpy()
-            imgs_val_pred = tf.image.rgb_to_grayscale(imgs_val_pred).numpy()
-
-        # remove last channel since images are grayscale
-        imgs_val_input = imgs_val_input[:, :, :, 0]
-        imgs_val_pred = imgs_val_pred[:, :, :, 0]
-
         # instantiate TensorImages object to compute validation resmaps
         tensor_val = postprocessing.TensorImages(
             imgs_input=imgs_val_input,
@@ -152,15 +143,6 @@ def main(args):
         # get reconstructed images (i.e predictions) on validation dataset
         logger.info("reconstructing test images...")
         imgs_test_pred = autoencoder.model.predict(imgs_test_input)
-
-        # convert to grayscale if RGB
-        if color_mode == "rgb":
-            imgs_test_input = tf.image.rgb_to_grayscale(imgs_test_input).numpy()
-            imgs_test_pred = tf.image.rgb_to_grayscale(imgs_test_pred).numpy()
-
-        # remove last channel since images are grayscale
-        imgs_test_input = imgs_test_input[:, :, :, 0]
-        imgs_test_pred = imgs_test_pred[:, :, :, 0]
 
         # instantiate TensorImages object to compute test resmaps
         tensor_test = postprocessing.TensorImages(
