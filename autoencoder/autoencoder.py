@@ -207,6 +207,7 @@ class AutoEncoder:
             stop_factor=6,
             verbose=self.verbose,
             show_plot=True,
+            restore_weights_only=True,
         )
 
         # getting ktrain's opt_lr estimation
@@ -251,6 +252,8 @@ class AutoEncoder:
                 self.log_dir
             )
         )
+
+        assert self.learner.model is self.model
 
         # fit model using Cyclical Learning Rates
         self.hist = self.learner.autofit(

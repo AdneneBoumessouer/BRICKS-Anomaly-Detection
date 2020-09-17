@@ -27,20 +27,27 @@ There is a total of 5 models based on the Convolutional Auto-Encoder (CAE) archi
 
 **NOTE:**
 The models *mvtecCAE*, *baselineCAE* and *inceptionCAE* are quite comparable in performance.
+**WARNING:**
 Both remaining models, *resnetCAE* and *skipCAE*, are still being tested, as they are prone to overfitting, which translates in the case of convolutional auto-encoders by copying its inputs without filtering out the defective regions.
 
 ## Prerequisites
 
 ### Dependencies
-Libraries and packages used in this project: 
-* `tensorflow-gpu 2.1.0`
-* `Keras 2.3.1`
-* `ktrain 0.13.0`
-* `scikit-image 0.17.2`
-* `opencv-python 4.2.0.34`
-* `pandas 1.0.3`
-* `numpy 1.18.1`
-* `matplotlib 3.1.3`
+The main libraries used in this project with their corresponding versions are listed below: 
+* `tensorflow == 2.1.0`
+* `ktrain == 0.21.3`
+* `scikit-image == 0.16.2`
+* `scikit-learn == 0.23.2`
+
+### Installation
+1. Make sure pip is up-to-date with: `pip install -U pip`
+2. Install [TensorFlow 2](https://www.tensorflow.org/install) if it is not already installed (e.g., `pip install tensorflow==2.1`).
+3. Install [ktrain](https://github.com/amaiya/ktrain): `pip install ktrain`
+4. Install [scikit-image](https://scikit-image.org/): `pip install scikit-image`
+5. Install [scikit-learn](https://scikit-learn.org/stable/): `pip install scikit-learn`
+
+The above should be all you need on Linux systems and cloud computing environments like Google Colab and AWS EC2. If you are using ktrain on a Windows computer, you can follow the more detailed instructions provided [here](https://github.com/amaiya/ktrain/blob/master/FAQ.md#how-do-i-install-ktrain-on-a-windows-machine) that include some extra steps.
+
 
 
 ### Download the Dataset
