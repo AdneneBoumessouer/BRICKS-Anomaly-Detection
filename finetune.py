@@ -109,15 +109,6 @@ def main(args):
     # reconstruct (i.e predict) validation images
     imgs_val_pred = model.predict(imgs_val_input)
 
-    # convert to grayscale if RGB
-    if color_mode == "rgb":
-        imgs_val_input = tf.image.rgb_to_grayscale(imgs_val_input).numpy()
-        imgs_val_pred = tf.image.rgb_to_grayscale(imgs_val_pred).numpy()
-
-    # remove last channel since images are grayscale
-    imgs_val_input = imgs_val_input[:, :, :, 0]
-    imgs_val_pred = imgs_val_pred[:, :, :, 0]
-
     # instantiate TensorImages object to compute validation resmaps
     tensor_val = postprocessing.TensorImages(
         imgs_input=imgs_val_input,
@@ -167,15 +158,6 @@ def main(args):
 
     # reconstruct (i.e predict) finetuning images
     imgs_ft_pred = model.predict(imgs_ft_input)
-
-    # convert to grayscale if RGB
-    if color_mode == "rgb":
-        imgs_ft_input = tf.image.rgb_to_grayscale(imgs_ft_input).numpy()
-        imgs_ft_pred = tf.image.rgb_to_grayscale(imgs_ft_pred).numpy()
-
-    # remove last channel since images are grayscale
-    imgs_ft_input = imgs_ft_input[:, :, :, 0]
-    imgs_ft_pred = imgs_ft_pred[:, :, :, 0]
 
     # instantiate TensorImages object to compute finetuning resmaps
     tensor_ft = postprocessing.TensorImages(

@@ -1,6 +1,7 @@
 import os
 import time
 import numpy as np
+import tensorflow as tf
 from skimage.metrics import structural_similarity as ssim
 from processing import utils
 from processing.utils import printProgressBar
@@ -40,51 +41,55 @@ class TensorImages:
         dtype="float64",
         filenames=None,
     ):
-        assert imgs_input.ndim == 3
-        assert imgs_pred.ndim == 3
-        self.imgs_input = imgs_input
-        self.imgs_pred = imgs_pred
+        assert imgs_input.ndim == imgs_pred.ndim == 4
+        assert dtype in ["float64", "uint8"]
+        assert method in ["l2", "ssim", "mssim"]
+        self.method = method
         self.dtype = dtype
-
         # pixel min and max values of input and reconstruction (pred)
         # depend on preprocessing function, which in turn depends on
         # the model used for training.
         self.vmin = vmin
         self.vmax = vmax
+        self.filenames = filenames
+
+        # if grayscale, reduce dim to (samples x length x width)
+        if imgs_input.shape[-1] == 1:
+            imgs_input = imgs_input[:, :, :, 0]
+            imgs_pred = imgs_pred[:, :, :, 0]
+            self.cmap = "gray"
+        # if RGB
+        else:
+            self.cmap = None
 
         # compute resmaps
-        assert dtype in ["float64", "uint8"]
-        assert method in ["l2", "ssim", "mssim"]
+        self.imgs_input = imgs_input
+        self.imgs_pred = imgs_pred
         self.resmaps = calculate_resmaps(self.imgs_input, self.imgs_pred, method, dtype)
-        if dtype == "float64":
-            if method in ["ssim", "mssim"]:
-                self.thresh_min = THRESH_MIN_FLOAT_SSIM
-                self.thresh_step = THRESH_STEP_FLOAT_SSIM
-                self.vmin_resmap = 0.0
-                self.vmax_resmap = 1.0
-            elif method == "l2":
-                self.thresh_min = THRESH_MIN_FLOAT_L2
-                self.thresh_step = THRESH_STEP_FLOAT_L2
-                self.vmin_resmap = None
-                self.vmax_resmap = None
-        elif dtype == "uint8":
-            if method in ["ssim", "mssim"]:
-                self.thresh_min = THRESH_MIN_UINT8_SSIM
-                self.thresh_step = THRESH_STEP_UINT8_SSIM
-                self.vmin_resmap = 0
-                self.vmax_resmap = 255
-            elif method == "l2":
-                self.thresh_min = THRESH_MIN_UINT8_L2
-                self.thresh_step = THRESH_STEP_UINT8_L2
-                self.vmin_resmap = 0
-                self.vmax_resmap = 255
-            # Convert to 8-bit unsigned int
-            self.resmaps = img_as_ubyte(self.resmaps)
 
         # compute maximal threshold based on resmaps
         self.thresh_max = np.amax(self.resmaps)
-        self.method = method
-        self.filenames = filenames
+
+        # set parameters for future segmentation of resmaps
+        if dtype == "float64":
+            self.vmin_resmap = 0.0
+            self.vmax_resmap = 1.0
+            if method in ["ssim", "mssim"]:
+                self.thresh_min = THRESH_MIN_FLOAT_SSIM
+                self.thresh_step = THRESH_STEP_FLOAT_SSIM
+            elif method == "l2":
+                self.thresh_min = THRESH_MIN_FLOAT_L2
+                self.thresh_step = THRESH_STEP_FLOAT_L2
+
+        elif dtype == "uint8":
+            self.vmin_resmap = 0
+            self.vmax_resmap = 255
+            if method in ["ssim", "mssim"]:
+                self.thresh_min = THRESH_MIN_UINT8_SSIM
+                self.thresh_step = THRESH_STEP_UINT8_SSIM
+            elif method == "l2":
+                self.thresh_min = THRESH_MIN_UINT8_L2
+                self.thresh_step = THRESH_STEP_UINT8_L2
 
     def generate_inspection_plots(self, group, save_dir=None):
         assert group in ["validation", "test"]
@@ -107,19 +112,19 @@ class TensorImages:
         fig, axarr = plt.subplots(3, 1)
         fig.set_size_inches((4, 9))
 
-        im00 = axarr[0].imshow(
-            self.imgs_input[index], cmap="gray", vmin=self.vmin, vmax=self.vmax,
+        axarr[0].imshow(
+            self.imgs_input[index], cmap=self.cmap, vmin=self.vmin, vmax=self.vmax,
         )
         axarr[0].set_title("input")
         axarr[0].set_axis_off()
-        fig.colorbar(im00, ax=axarr[0])
+        # fig.colorbar(im00, ax=axarr[0])
 
-        im10 = axarr[1].imshow(
-            self.imgs_pred[index], cmap="gray", vmin=self.vmin, vmax=self.vmax
+        axarr[1].imshow(
+            self.imgs_pred[index], cmap=self.cmap, vmin=self.vmin, vmax=self.vmax
         )
         axarr[1].set_title("pred")
         axarr[1].set_axis_off()
-        fig.colorbar(im10, ax=axarr[1])
+        # fig.colorbar(im10, ax=axarr[1])
 
         im20 = axarr[2].imshow(
             self.resmaps[index],
@@ -144,12 +149,12 @@ class TensorImages:
         # select image to plot
         if plot_type == "input":
             image = self.imgs_input[index]
-            cmap = "gray"
+            cmap = self.cmap
             vmin = self.vmin
             vmax = self.vmax
         elif plot_type == "pred":
             image = self.imgs_pred[index]
-            cmap = "gray"
+            cmap = self.cmap
             vmin = self.vmin
             vmax = self.vmax
         elif plot_type == "resmap":
@@ -180,10 +185,22 @@ def get_plot_name(filename, suffix):
 
 
 def calculate_resmaps(imgs_input, imgs_pred, method, dtype="float64"):
+    """
+    To calculate resmaps, input tensors must be grayscale and of shape (samples x length x width).
+    """
+    # if RGB, transform to grayscale and reduce tensor dimension to 3
+    if imgs_input.ndim == 4 and imgs_input.shape[-1] == 3:
+        imgs_input_gray = tf.image.rgb_to_grayscale(imgs_input).numpy()[:, :, :, 0]
+        imgs_pred_gray = tf.image.rgb_to_grayscale(imgs_pred).numpy()[:, :, :, 0]
+    else:
+        imgs_input_gray = imgs_input
+        imgs_pred_gray = imgs_pred
+
+    # calculate remaps
     if method == "l2":
-        resmaps = resmaps_l2(imgs_input, imgs_pred)
+        resmaps = resmaps_l2(imgs_input_gray, imgs_pred_gray)
     elif method in ["ssim", "mssim"]:
-        resmaps = resmaps_ssim(imgs_input, imgs_pred)
+        resmaps = resmaps_ssim(imgs_input_gray, imgs_pred_gray)
     if dtype == "uint8":
         resmaps = img_as_ubyte(resmaps)
     return resmaps
