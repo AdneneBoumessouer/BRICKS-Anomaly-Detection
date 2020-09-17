@@ -1,7 +1,5 @@
 import os
-import tensorflow as tf
-from tensorflow import keras
-from keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 # Data augmentation parameters (only for training)
 ROT_ANGLE = 0

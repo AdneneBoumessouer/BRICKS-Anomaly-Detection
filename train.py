@@ -243,5 +243,5 @@ if __name__ == "__main__":
 # python3 train.py -d LEGO_light/SV -a mvtecCAE -b 8 -l ssim -c grayscale --inspect
 # python3 train.py -d LEGO_light/SV -a baselineCAE -b 8 -l ssim -c grayscale --inspect
 # python3 train.py -d LEGO_light/SV -a inceptionCAE -b 8 -l ssim -c grayscale --inspect
-# python3 train.py -d LEGO_light/SV -a resnetCAE -b 8 -l ssim -c grayscale --inspect
+# python3 train.py -d LEGO_light/SV -a resnetCAE -b 8 -l mssim -c rgb --inspect
 # python3 train.py -d LEGO_light/SV -a skipCAE -b 8 -l ssim -c grayscale --inspect

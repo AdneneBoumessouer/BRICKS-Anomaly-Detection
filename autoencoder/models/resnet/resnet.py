@@ -22,7 +22,7 @@ from tensorflow.keras.layers import (
     concatenate,
 )
 from tensorflow.keras.regularizers import l2
-from keras import backend as K
+from tensorflow.keras import backend as K
 
 global ROW_AXIS
 global COL_AXIS
