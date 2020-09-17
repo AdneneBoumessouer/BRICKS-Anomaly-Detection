@@ -112,14 +112,14 @@ class TensorImages:
         fig, axarr = plt.subplots(3, 1)
         fig.set_size_inches((4, 9))
 
-        im00 = axarr[0].imshow(
+        axarr[0].imshow(
             self.imgs_input[index], cmap=self.cmap, vmin=self.vmin, vmax=self.vmax,
         )
         axarr[0].set_title("input")
         axarr[0].set_axis_off()
         # fig.colorbar(im00, ax=axarr[0])
 
-        im10 = axarr[1].imshow(
+        axarr[1].imshow(
             self.imgs_pred[index], cmap=self.cmap, vmin=self.vmin, vmax=self.vmax
         )
         axarr[1].set_title("pred")
