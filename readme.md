@@ -10,6 +10,7 @@ The method is devided in 3 steps: training, finetuning and testing.
 ![Image of Yaktocat](overview.png)
 
 **NOTE: Why Semi-Supervised and not Unsupervised?**
+
 The method proposed in the [MVTec paper](https://www.mvtec.com/fileadmin/Redaktion/mvtec.com/company/research/mvtec_ad.pdf) is unsupervised, as a subset containing only anomaly-free training images (validation set) are used during the validation step to determine the threshold for classification and segmentation of test images. However, the validation algorithm is based on a user input parameter, the minimum defect area, which definition remains unclear and unexplained in the aforementioned paper. Because the choice of this parameter can greatly influence the classification and segmentation results and in an effort to automate the process and remove the need for all user input, we developed a finetuning algorithm that computes different thresholds corresponding to a wide range of discrete minimum defect areas using the validation set. Subsequently, a small subset of anomaly and anomaly-free images of the test set (finetuning set) is used to select the best minimum defect area and threshold pait that will finally be used to classify and segment the remaining test images. Since our method relies on test images for finetuning, we describe it as being semi-supervised.
 
 ## Dataset
@@ -26,10 +27,12 @@ There is a total of 5 models based on the Convolutional Auto-Encoder (CAE) archi
 * *skipCAE* is inspired by: https://arxiv.org/pdf/1606.08921.pdf
 
 **NOTE:**
-* *mvtecCAE*, *baselineCAE* and *inceptionCAE* are comparable in performance.
+
+*mvtecCAE*, *baselineCAE* and *inceptionCAE* are comparable in performance.
 
 **WARNING:**
-* *resnetCAE* and *skipCAE*, are still being tested, as they are prone to overfitting, which translates in the case of convolutional auto-encoders by copying its inputs without filtering out the defective regions.
+
+*resnetCAE* and *skipCAE*, are still being tested, as they are prone to overfitting, which translates in the case of convolutional auto-encoders by copying its inputs without filtering out the defective regions.
 
 ## Prerequisites
 
@@ -39,10 +42,11 @@ The main libraries used in this project with their corresponding versions are li
 * `ktrain == 0.21.3`
 * `scikit-image == 0.16.2`
 * `scikit-learn == 0.23.2`
+
 For more information, refer to `requirement.txt`.
 
 ### Installation
-We highly recommend setting up a virtual anvironment (e.g., anaconda environment) to install the following dependencies.
+Before installing dependencies, we highly recommend setting up a virtual anvironment (e.g., anaconda environment).
 
 1. Make sure pip is up-to-date with: `pip install -U pip`
 2. Install [TensorFlow 2](https://www.tensorflow.org/install) if it is not already installed (e.g., `pip install tensorflow==2.1`).
@@ -133,7 +137,9 @@ Example usage:
 ```
 python3 train.py -d mvtec/capsule -a mvtecCAE -b 8 -l ssim -c grayscale
 ```
-**NOTE 1:** There is no need for the user to pass a number of epochs since the training process implements an Early Stopping strategy.
+**NOTE:** 
+
+There is no need for the user to pass a number of epochs since the training process implements an Early Stopping strategy.
 
 
 ### Finetuning (`finetune.py`)
