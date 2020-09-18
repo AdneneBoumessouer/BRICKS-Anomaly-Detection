@@ -26,9 +26,10 @@ There is a total of 5 models based on the Convolutional Auto-Encoder (CAE) archi
 * *skipCAE* is inspired by: https://arxiv.org/pdf/1606.08921.pdf
 
 **NOTE:**
-The models *mvtecCAE*, *baselineCAE* and *inceptionCAE* are quite comparable in performance.
+* *mvtecCAE*, *baselineCAE* and *inceptionCAE* are comparable in performance.
+
 **WARNING:**
-Both remaining models, *resnetCAE* and *skipCAE*, are still being tested, as they are prone to overfitting, which translates in the case of convolutional auto-encoders by copying its inputs without filtering out the defective regions.
+* *resnetCAE* and *skipCAE*, are still being tested, as they are prone to overfitting, which translates in the case of convolutional auto-encoders by copying its inputs without filtering out the defective regions.
 
 ## Prerequisites
 
@@ -38,8 +39,11 @@ The main libraries used in this project with their corresponding versions are li
 * `ktrain == 0.21.3`
 * `scikit-image == 0.16.2`
 * `scikit-learn == 0.23.2`
+For more information, refer to `requirement.txt`.
 
 ### Installation
+We highly recommend setting up a virtual anvironment (e.g., anaconda environment) to install the following dependencies.
+
 1. Make sure pip is up-to-date with: `pip install -U pip`
 2. Install [TensorFlow 2](https://www.tensorflow.org/install) if it is not already installed (e.g., `pip install tensorflow==2.1`).
 3. Install [ktrain](https://github.com/amaiya/ktrain): `pip install ktrain`
