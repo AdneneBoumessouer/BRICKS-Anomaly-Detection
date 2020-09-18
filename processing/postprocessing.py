@@ -2,14 +2,14 @@ import os
 import time
 import numpy as np
 import tensorflow as tf
-from skimage.metrics import structural_similarity as ssim
 from processing import utils
 from processing.utils import printProgressBar
 import matplotlib.pyplot as plt
-from skimage.util import img_as_ubyte
+from skimage.metrics import structural_similarity as ssim
 from skimage.segmentation import clear_border
 from skimage.measure import label, regionprops
 from skimage.morphology import closing, square
+from skimage.util import img_as_ubyte
 import logging
 
 logging.basicConfig(level=logging.INFO)
