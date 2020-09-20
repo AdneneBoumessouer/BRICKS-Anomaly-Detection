@@ -242,4 +242,4 @@ if __name__ == "__main__":
     main(args)
 
 # Examples of command to initiate testing
-# python3 test.py -p saved_models/mvtec/capsule/mvtecCAE/ssim/13-06-2020_15-35-10/mvtecCAE_b8_e39.hdf5
+# python3 test.py -p saved_models/LEGO_light/SV/mvtecCAE/mssim/20-09-2020_14-21-51/mvtecCAE_b8_e148.hdf5

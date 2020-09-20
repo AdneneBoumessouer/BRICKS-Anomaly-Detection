@@ -2,7 +2,6 @@ import os
 import time
 import numpy as np
 import tensorflow as tf
-from processing import utils
 from processing.utils import printProgressBar
 import matplotlib.pyplot as plt
 from skimage.metrics import structural_similarity
@@ -17,13 +16,13 @@ logger = logging.getLogger(__name__)
 
 # Segmentation Parameters
 # float + SSIM
-THRESH_MIN_FLOAT_SSIM = 0.20
+THRESH_MIN_FLOAT_SSIM = 0.10
 THRESH_STEP_FLOAT_SSIM = 0.002
 # float + L2
 THRESH_MIN_FLOAT_L2 = 0.005
 THRESH_STEP_FLOAT_L2 = 0.0005
 # uint8 + SSIM
-THRESH_MIN_UINT8_SSIM = 50
+THRESH_MIN_UINT8_SSIM = 20
 THRESH_STEP_UINT8_SSIM = 1
 # uint8 + L2 (generally uneffective combination)
 THRESH_MIN_UINT8_L2 = 5
@@ -139,7 +138,8 @@ class TensorImages:
             + self.method
             + "_"
             + self.dtype
-            + "{}_score={}".format(self.method, self.scores[index])
+            + "\n{}_".format(self.method)
+            + f"score = {self.scores[index]:.2E}"
         )
         axarr[2].set_axis_off()
         fig.colorbar(im20, ax=axarr[2])
@@ -220,7 +220,7 @@ def resmaps_ssim(imgs_input, imgs_pred):
     for index in range(len(imgs_input)):
         img_input = imgs_input[index]
         img_pred = imgs_pred[index]
-        score_ssim, resmap = structural_similarity(
+        score, resmap = structural_similarity(
             img_input,
             img_pred,
             win_size=11,
@@ -231,7 +231,7 @@ def resmaps_ssim(imgs_input, imgs_pred):
         )
         # resmap = np.expand_dims(resmap, axis=-1)
         resmaps[index] = 1 - resmap
-        scores.append(1 - score_ssim)
+        scores.append(score)
     resmaps = np.clip(resmaps, a_min=-1, a_max=1)
     return scores, resmaps
 

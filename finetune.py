@@ -16,16 +16,11 @@ from processing.utils import printProgressBar
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 from test import predict_classes
+import config
 import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# Finetuning parameters
-FINETUNE_SPLIT = 0.1
-STEP_MIN_AREA = 5
-START_MIN_AREA = 5
-STOP_MIN_AREA = 1005
 
 
 def calculate_largest_areas(resmaps, thresholds):
@@ -141,7 +136,7 @@ def main(args):
     _, index_array_ft, _, classes_ft = train_test_split(
         index_array,
         classes,
-        test_size=FINETUNE_SPLIT,
+        test_size=config.FINETUNE_SPLIT,
         random_state=42,
         stratify=classes,
     )
@@ -184,8 +179,11 @@ def main(args):
     }
 
     # initialize discrete min_area values
-    min_areas = np.arange(start=START_MIN_AREA, stop=STOP_MIN_AREA, step=STEP_MIN_AREA)
-    length = len(min_areas)
+    min_areas = np.arange(
+        start=config.START_MIN_AREA,
+        stop=config.STOP_MIN_AREA,
+        step=config.STEP_MIN_AREA,
+    )
 
     # initialize thresholds
     thresholds = np.arange(
@@ -270,7 +268,7 @@ def main(args):
         "best_score": max_score,
         "method": method,
         "dtype": dtype,
-        "split": FINETUNE_SPLIT,
+        "split": config.FINETUNE_SPLIT,
     }
     print("finetuning results: {}".format(finetuning_result))
 
@@ -288,8 +286,6 @@ def main(args):
 
 def plot_min_area_threshold(dict_finetune, index_best=None, save_dir=None):
     df_finetune = pd.DataFrame.from_dict(dict_finetune)
-    min_areas = dict_finetune["min_area"]
-    thresholds = dict_finetune["threshold"]
     with plt.style.context("seaborn-darkgrid"):
         df_finetune.plot(x="min_area", y=["threshold"], figsize=(12, 8))
         if index_best is not None:
@@ -365,7 +361,7 @@ if __name__ == "__main__":
 
 # Example of command to initiate finetuning with different resmap processing arguments (best combination: -m ssim -t float64)
 
-# python3 finetune.py -p saved_models/mvtec/capsule/mvtecCAE/ssim/13-06-2020_15-35-10/mvtecCAE_b8_e39.hdf5 -m ssim -t float64
+# python3 finetune.py -p saved_models/LEGO_light/SV/mvtecCAE/mssim/20-09-2020_14-21-51/mvtecCAE_b8_e148.hdf5 -m ssim -t float64
 # python3 finetune.py -p saved_models/mvtec/capsule/mvtecCAE/ssim/13-06-2020_15-35-10/mvtecCAE_b8_e39.hdf5 -m ssim -t uint8
 # python3 finetune.py -p saved_models/mvtec/capsule/mvtecCAE/ssim/13-06-2020_15-35-10/mvtecCAE_b8_e39.hdf5 -m l2 -t float64
 # python3 finetune.py -p saved_models/mvtec/capsule/mvtecCAE/ssim/13-06-2020_15-35-10/mvtecCAE_b8_e39.hdf5 -m l2 -t uint8
