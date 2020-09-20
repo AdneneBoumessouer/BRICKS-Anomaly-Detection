@@ -92,12 +92,17 @@ class TensorImages:
                 self.thresh_min = THRESH_MIN_UINT8_L2
                 self.thresh_step = THRESH_STEP_UINT8_L2
 
-    def generate_inspection_plots(self, group, save_dir=None):
+    def generate_inspection_plots(self, group, filenames_plot=[], save_dir=None):
         assert group in ["validation", "test"]
         logger.info("generating inspection plots on " + group + " images...")
-        l = len(self.filenames)
+        if filenames_plot != []:
+            indicies = [self.filenames.index(filename) for filename in filenames_plot]
+            l = len(filenames_plot)
+        else:
+            indicies = list(range(len(self.imgs_input)))
+            l = len(self.filenames)
         printProgressBar(0, l, prefix="Progress:", suffix="Complete", length=80)
-        for i in range(len(self.imgs_input)):
+        for i in indicies:
             self.plot_input_pred_resmap(index=i, group=group, save_dir=save_dir)
             # print progress bar
             time.sleep(0.1)

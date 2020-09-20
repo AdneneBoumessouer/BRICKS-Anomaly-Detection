@@ -13,6 +13,7 @@ from processing.preprocessing import Preprocessor
 from processing.utils import printProgressBar as printProgressBar
 from processing import utils
 from processing import postprocessing
+import config
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -120,7 +121,9 @@ def main(args):
 
         # generate and save inspection validation plots
         tensor_val.generate_inspection_plots(
-            group="validation", save_dir=inspection_val_dir
+            group="validation",
+            filenames_plot=config.FILENAMES_VAL_INSPECTION,
+            save_dir=inspection_val_dir,
         )
 
         # -------------- INSPECTING TEST IMAGES --------------
@@ -157,7 +160,9 @@ def main(args):
 
         # generate and save inspection test plots
         tensor_test.generate_inspection_plots(
-            group="test", save_dir=inspection_test_dir
+            group="test",
+            filenames_plot=config.FILENAMES_TEST_INSPECTION,
+            save_dir=inspection_test_dir,
         )
 
     logger.info("done.")
