@@ -5,7 +5,7 @@ import tensorflow as tf
 from processing import utils
 from processing.utils import printProgressBar
 import matplotlib.pyplot as plt
-from skimage.metrics import structural_similarity as ssim
+from skimage.metrics import structural_similarity
 from skimage.segmentation import clear_border
 from skimage.measure import label, regionprops
 from skimage.morphology import closing, square
@@ -65,7 +65,9 @@ class TensorImages:
         # compute resmaps
         self.imgs_input = imgs_input
         self.imgs_pred = imgs_pred
-        self.resmaps = calculate_resmaps(self.imgs_input, self.imgs_pred, method, dtype)
+        self.scores, self.resmaps = calculate_resmaps(
+            self.imgs_input, self.imgs_pred, method, dtype
+        )
 
         # compute maximal threshold based on resmaps
         self.thresh_max = np.amax(self.resmaps)
@@ -132,7 +134,13 @@ class TensorImages:
             vmin=self.vmin_resmap,
             vmax=self.vmax_resmap,
         )
-        axarr[2].set_title("resmap_" + self.method + "_" + self.dtype)
+        axarr[2].set_title(
+            "resmap_"
+            + self.method
+            + "_"
+            + self.dtype
+            + "{}_score={}".format(self.method, self.scores[index])
+        )
         axarr[2].set_axis_off()
         fig.colorbar(im20, ax=axarr[2])
 
@@ -198,36 +206,40 @@ def calculate_resmaps(imgs_input, imgs_pred, method, dtype="float64"):
 
     # calculate remaps
     if method == "l2":
-        resmaps = resmaps_l2(imgs_input_gray, imgs_pred_gray)
+        scores, resmaps = resmaps_l2(imgs_input_gray, imgs_pred_gray)
     elif method in ["ssim", "mssim"]:
-        resmaps = resmaps_ssim(imgs_input_gray, imgs_pred_gray)
+        scores, resmaps = resmaps_ssim(imgs_input_gray, imgs_pred_gray)
     if dtype == "uint8":
         resmaps = img_as_ubyte(resmaps)
-    return resmaps
+    return scores, resmaps
 
 
 def resmaps_ssim(imgs_input, imgs_pred):
     resmaps = np.zeros(shape=imgs_input.shape, dtype="float64")
+    scores = []
     for index in range(len(imgs_input)):
         img_input = imgs_input[index]
         img_pred = imgs_pred[index]
-        _, resmap = ssim(
+        score_ssim, resmap = structural_similarity(
             img_input,
             img_pred,
             win_size=11,
             gaussian_weights=True,
+            multichannel=False,
             sigma=1.5,
             full=True,
         )
         # resmap = np.expand_dims(resmap, axis=-1)
         resmaps[index] = 1 - resmap
+        scores.append(1 - score_ssim)
     resmaps = np.clip(resmaps, a_min=-1, a_max=1)
-    return resmaps
+    return scores, resmaps
 
 
 def resmaps_l2(imgs_input, imgs_pred):
     resmaps = (imgs_input - imgs_pred) ** 2
-    return resmaps
+    scores = list(np.sqrt(np.sum(resmaps, axis=0)).flatten())
+    return scores, resmaps
 
 
 ## functions for processing resmaps

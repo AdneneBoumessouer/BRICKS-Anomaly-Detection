@@ -79,10 +79,10 @@ def main(args):
     )
 
     # find best learning rates for training
-    autoencoder.find_opt_lr(train_generator, validation_generator)
+    autoencoder.find_lr_opt(train_generator, validation_generator)
 
     # train
-    autoencoder.fit()
+    autoencoder.fit(lr_opt=autoencoder.lr_opt)
 
     # save model
     autoencoder.save()
