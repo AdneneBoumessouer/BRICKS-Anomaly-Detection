@@ -102,11 +102,11 @@ class TensorImages:
             indicies = list(range(len(self.imgs_input)))
             l = len(self.filenames)
         printProgressBar(0, l, prefix="Progress:", suffix="Complete", length=80)
-        for i in indicies:
+        for j, i in enumerate(indicies):
             self.plot_input_pred_resmap(index=i, group=group, save_dir=save_dir)
             # print progress bar
             time.sleep(0.1)
-            printProgressBar(i + 1, l, prefix="Progress:", suffix="Complete", length=80)
+            printProgressBar(j + 1, l, prefix="Progress:", suffix="Complete", length=80)
         if save_dir is not None:
             logger.info("all generated files are saved at: \n{}".format(save_dir))
         return
