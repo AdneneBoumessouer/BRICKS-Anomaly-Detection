@@ -73,24 +73,28 @@ class TensorImages:
 
         # set parameters for future segmentation of resmaps
         if dtype == "float64":
-            self.vmin_resmap = 0.0
-            self.vmax_resmap = 1.0
             if method in ["ssim", "mssim"]:
                 self.thresh_min = THRESH_MIN_FLOAT_SSIM
                 self.thresh_step = THRESH_STEP_FLOAT_SSIM
+                self.vmin_resmap = 0.0
+                self.vmax_resmap = 1.0
             elif method == "l2":
                 self.thresh_min = THRESH_MIN_FLOAT_L2
                 self.thresh_step = THRESH_STEP_FLOAT_L2
+                self.vmin_resmap = 0.0
+                self.vmax_resmap = np.amax(self.resmaps)
 
         elif dtype == "uint8":
-            self.vmin_resmap = 0
-            self.vmax_resmap = 255
             if method in ["ssim", "mssim"]:
                 self.thresh_min = THRESH_MIN_UINT8_SSIM
                 self.thresh_step = THRESH_STEP_UINT8_SSIM
+                self.vmin_resmap = 0
+                self.vmax_resmap = 255
             elif method == "l2":
                 self.thresh_min = THRESH_MIN_UINT8_L2
                 self.thresh_step = THRESH_STEP_UINT8_L2
+                self.vmin_resmap = 0
+                self.vmax_resmap = np.amax(self.resmaps)
 
     def generate_inspection_plots(self, group, filenames_plot=[], save_dir=None):
         assert group in ["validation", "test"]
@@ -112,6 +116,55 @@ class TensorImages:
         return
 
     ### plottings methods for inspection
+
+    def generate_inspection_figure(self, filenames_plot=[], threshold=None):
+        if filenames_plot != []:
+            indicies = [self.filenames.index(filename) for filename in filenames_plot]
+            # l = len(filenames_plot)
+        else:
+            indicies = list(range(len(self.imgs_input)))
+            # l = len(self.filenames)
+
+        # scores, resmaps = calculate_resmaps(imgs_input, imgs_pred, method="ssim")
+        nrows = len(indicies)
+
+        fig, axarr = plt.subplots(nrows=nrows, ncols=3, figsize=(15, 5 * nrows))
+
+        for i, j in enumerate(indicies):
+            axarr[i, 0].imshow(self.imgs_input[j], cmap=self.cmap)
+            axarr[i, 0].set_title("input")
+            axarr[i, 0].set_axis_off()
+
+            axarr[i, 1].imshow(self.imgs_pred[j], cmap=self.cmap)
+            axarr[i, 1].set_title("pred")
+            axarr[i, 1].set_axis_off()
+
+            res = axarr[i, 2].imshow(
+                self.resmaps[j],
+                vmin=self.vmin_resmap,
+                vmax=self.vmax_resmap,
+                cmap="inferno",
+            )
+            axarr[i, 2].set_title("resmap\n" + f"score = {self.scores[j]:.2E}")
+            axarr[i, 2].set_axis_off()
+            fig.colorbar(res, ax=axarr[i, 2])
+        return
+
+    def generate_score_scatter_plot(self, generator):
+        fig = plt.figure(figsize=(15, 8))
+        for category in list(generator.class_indices.keys()):
+            indicies_cat = np.nonzero(
+                generator.classes == generator.class_indices[category]
+            )
+            scores = self.scores[indicies_cat]
+            if category == "good":
+                plt.scatter(indicies_cat, scores, alpha=0.5, marker="*", label=category)
+            else:
+                plt.scatter(indicies_cat, scores, alpha=0.5, marker=".", label=category)
+        plt.xlabel("image index")
+        plt.ylabel(self.method + "_score")
+        plt.legend()
+        return
 
     def plot_input_pred_resmap(self, index, group, save_dir=None):
         assert group in ["validation", "test"]
@@ -179,7 +232,8 @@ class TensorImages:
         fig, ax = plt.subplots(figsize=(5, 3))
         im = ax.imshow(image, cmap=cmap, vmin=vmin, vmax=vmax)
         ax.set_axis_off()
-        fig.colorbar(im)
+        if plot_type == "resmap":
+            fig.colorbar(im)
         title = plot_type + "\n" + self.filenames[index]
         plt.title(title)
         plt.show()
@@ -238,12 +292,13 @@ def resmaps_ssim(imgs_input, imgs_pred):
         resmaps[index] = 1 - resmap
         scores.append(score)
     resmaps = np.clip(resmaps, a_min=-1, a_max=1)
+    scores = np.array(scores)
     return scores, resmaps
 
 
 def resmaps_l2(imgs_input, imgs_pred):
     resmaps = (imgs_input - imgs_pred) ** 2
-    scores = list(np.sqrt(np.sum(resmaps, axis=0)).flatten())
+    scores = np.sqrt(np.sum(resmaps, axis=0)).flatten()
     return scores, resmaps
 
 

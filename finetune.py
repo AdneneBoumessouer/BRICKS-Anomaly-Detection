@@ -129,7 +129,7 @@ def main(args):
     filenames_test = finetuning_generator.filenames
 
     # select a representative subset of test images for finetuning
-    #  using stratified sampling
+    # using stratified sampling
     assert "good" in finetuning_generator.class_indices
     index_array = finetuning_generator.index_array
     classes = finetuning_generator.classes

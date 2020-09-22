@@ -28,19 +28,19 @@ STOP_MIN_AREA = 1005
 
 
 FILENAMES_VAL_INSPECTION = [
-    "A_good_sv/004.png",
-    "A_good_sv/104.png",
-    "A_good_sv/154.png",
-    "A_good_sv/204.png",
-    "A_good_sv/304.png",
+    "good/004.png",
+    "good/104.png",
+    "good/154.png",
+    "good/204.png",
+    "good/304.png",
 ]
 
 FILENAMES_TEST_INSPECTION = [
-    "A_good_sv/010.png",
-    "A_good_sv/055.png",
-    "A_good_sv/080.png",
-    "A_good_sv/120.png",
-    "A_good_sv/240.png",
+    "good/010.png",
+    "good/055.png",
+    "good/080.png",
+    "good/120.png",
+    "good/240.png",
     "B_added_sv/020.png",
     "B_added_sv/040.png",
     "B_added_sv/080.png",
