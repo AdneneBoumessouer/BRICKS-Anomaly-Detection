@@ -128,7 +128,10 @@ class TensorImages:
         # scores, resmaps = calculate_resmaps(imgs_input, imgs_pred, method="ssim")
         nrows = len(indicies)
 
-        fig, axarr = plt.subplots(nrows=nrows, ncols=3, figsize=(15, 5 * nrows))
+        # if threshold is None: ncols = 3 else: ncols = 4
+        ncols = 3 if threshold is None else 4
+
+        fig, axarr = plt.subplots(nrows=nrows, ncols=ncols, figsize=(15, 5 * nrows))
 
         for i, j in enumerate(indicies):
             axarr[i, 0].imshow(self.imgs_input[j], cmap=self.cmap)
@@ -148,6 +151,10 @@ class TensorImages:
             axarr[i, 2].set_title("resmap\n" + f"score = {self.scores[j]:.2E}")
             axarr[i, 2].set_axis_off()
             fig.colorbar(res, ax=axarr[i, 2])
+            if threshold is not None:
+                axarr[i, 3].imshow(self.resmaps[j] > threshold)
+                axarr[i, 3].set_title("segmentation")
+                axarr[i, 3].set_axis_off()
         return
 
     def generate_score_scatter_plot(self, generator):
