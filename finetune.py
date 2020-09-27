@@ -56,6 +56,7 @@ def calculate_largest_areas(resmaps, thresholds):
 def main(args):
     # Get validation arguments
     model_path = args.path
+    color = args.color  # NOT YET TAKEN INTO ACCOUNT
     method = args.method
     dtype = args.dtype
 
@@ -110,6 +111,7 @@ def main(args):
         imgs_pred=imgs_val_pred,
         vmin=vmin,
         vmax=vmax,
+        color="grayscale",
         method=method,
         dtype=dtype,
         filenames=filenames_val,
@@ -129,7 +131,7 @@ def main(args):
     filenames_test = finetuning_generator.filenames
 
     # select a representative subset of test images for finetuning
-    #  using stratified sampling
+    # using stratified sampling
     assert "good" in finetuning_generator.class_indices
     index_array = finetuning_generator.index_array
     classes = finetuning_generator.classes
@@ -160,6 +162,7 @@ def main(args):
         imgs_pred=imgs_ft_pred,
         vmin=vmin,
         vmax=vmax,
+        color="grayscale",
         method=method,
         dtype=dtype,
         filenames=filenames_ft,
@@ -337,10 +340,20 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "-m",
+        "--color",
+        required=False,
+        metavar="",
+        choices=["rgb", "grayscale"],
+        default="grayscale",
+        help="grayscale or rgb resmaps",
+    )
+
+    parser.add_argument(
+        "-m",
         "--method",
         required=False,
         metavar="",
-        choices=["ssim", "l2"],
+        choices=["ssim", "l2", "abs"],
         default="ssim",
         help="method for generating resmaps: 'ssim' or 'l2'",
     )

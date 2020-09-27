@@ -21,12 +21,18 @@ THRESH_STEP_FLOAT_SSIM = 0.002
 # float + L2
 THRESH_MIN_FLOAT_L2 = 0.005
 THRESH_STEP_FLOAT_L2 = 0.0005
+# float + ABS
+THRESH_MIN_FLOAT_ABS = 0.05
+THRESH_STEP_FLOAT_ABS = 0.005
 # uint8 + SSIM
 THRESH_MIN_UINT8_SSIM = 20
 THRESH_STEP_UINT8_SSIM = 1
 # uint8 + L2 (generally uneffective combination)
 THRESH_MIN_UINT8_L2 = 5
 THRESH_STEP_UINT8_L2 = 1
+# uint8 + ABS (generally uneffective combination)
+THRESH_MIN_UINT8_ABS = 10
+THRESH_STEP_UINT8_ABS = 1
 
 
 class TensorImages:
@@ -36,13 +42,15 @@ class TensorImages:
         imgs_pred,
         vmin,
         vmax,
+        color,
         method,
         dtype="float64",
         filenames=None,
     ):
         assert imgs_input.ndim == imgs_pred.ndim == 4
         assert dtype in ["float64", "uint8"]
-        assert method in ["l2", "ssim", "mssim"]
+        assert method in ["l2", "ssim", "abs"]
+        self.color = color
         self.method = method
         self.dtype = dtype
         # pixel min and max values of input and reconstruction (pred)
@@ -53,7 +61,8 @@ class TensorImages:
         self.filenames = filenames
 
         # if grayscale, reduce dim to (samples x length x width)
-        if imgs_input.shape[-1] == 1:
+        # if imgs_input.shape[-1] == 1:
+        if not is_rgb(imgs_input):
             imgs_input = imgs_input[:, :, :, 0]
             imgs_pred = imgs_pred[:, :, :, 0]
             self.cmap = "gray"
@@ -61,11 +70,13 @@ class TensorImages:
         else:
             self.cmap = None
 
+        self.cmap_resmap = "inferno" if self.color == "grayscale" else None
+
         # compute resmaps
         self.imgs_input = imgs_input
         self.imgs_pred = imgs_pred
         self.scores, self.resmaps = calculate_resmaps(
-            self.imgs_input, self.imgs_pred, method, dtype
+            self.imgs_input, self.imgs_pred, color, method, dtype
         )
 
         # compute maximal threshold based on resmaps
@@ -73,24 +84,38 @@ class TensorImages:
 
         # set parameters for future segmentation of resmaps
         if dtype == "float64":
-            self.vmin_resmap = 0.0
-            self.vmax_resmap = 1.0
-            if method in ["ssim", "mssim"]:
+            if method == "ssim":
                 self.thresh_min = THRESH_MIN_FLOAT_SSIM
                 self.thresh_step = THRESH_STEP_FLOAT_SSIM
+                self.vmin_resmap = 0.0
+                self.vmax_resmap = 1.0
             elif method == "l2":
                 self.thresh_min = THRESH_MIN_FLOAT_L2
                 self.thresh_step = THRESH_STEP_FLOAT_L2
+                self.vmin_resmap = 0.0
+                self.vmax_resmap = np.amax(self.resmaps)
+            elif method == "abs":
+                self.thresh_min = THRESH_MIN_FLOAT_ABS
+                self.thresh_step = THRESH_STEP_FLOAT_ABS
+                self.vmin_resmap = 0.0
+                self.vmax_resmap = 1.0
 
         elif dtype == "uint8":
-            self.vmin_resmap = 0
-            self.vmax_resmap = 255
-            if method in ["ssim", "mssim"]:
+            if method == "ssim":
                 self.thresh_min = THRESH_MIN_UINT8_SSIM
                 self.thresh_step = THRESH_STEP_UINT8_SSIM
+                self.vmin_resmap = 0
+                self.vmax_resmap = 255
             elif method == "l2":
                 self.thresh_min = THRESH_MIN_UINT8_L2
                 self.thresh_step = THRESH_STEP_UINT8_L2
+                self.vmin_resmap = 0
+                self.vmax_resmap = np.amax(self.resmaps)
+            elif method == "abs":
+                self.thresh_min = THRESH_MIN_UINT8_ABS
+                self.thresh_step = THRESH_STEP_UINT8_ABS
+                self.vmin_resmap = 0
+                self.vmax_resmap = 1.0
 
     def generate_inspection_plots(self, group, filenames_plot=[], save_dir=None):
         assert group in ["validation", "test"]
@@ -102,16 +127,67 @@ class TensorImages:
             indicies = list(range(len(self.imgs_input)))
             l = len(self.filenames)
         printProgressBar(0, l, prefix="Progress:", suffix="Complete", length=80)
-        for i in indicies:
+        for j, i in enumerate(indicies):
             self.plot_input_pred_resmap(index=i, group=group, save_dir=save_dir)
             # print progress bar
             time.sleep(0.1)
-            printProgressBar(i + 1, l, prefix="Progress:", suffix="Complete", length=80)
+            printProgressBar(j + 1, l, prefix="Progress:", suffix="Complete", length=80)
         if save_dir is not None:
             logger.info("all generated files are saved at: \n{}".format(save_dir))
         return
 
     ### plottings methods for inspection
+
+    def generate_inspection_figure(self, filenames_plot=[], threshold=None):
+        if filenames_plot != []:
+            indicies = [self.filenames.index(filename) for filename in filenames_plot]
+        else:
+            indicies = list(range(len(self.imgs_input)))
+
+        nrows = len(indicies)
+        ncols = 3 if threshold is None else 4
+
+        fig, axarr = plt.subplots(nrows=nrows, ncols=ncols, figsize=(15, 5 * nrows))
+        for i, j in enumerate(indicies):
+            axarr[i, 0].imshow(self.imgs_input[j], cmap=self.cmap)
+            axarr[i, 0].set_title("input")
+            axarr[i, 0].set_axis_off()
+
+            axarr[i, 1].imshow(self.imgs_pred[j], cmap=self.cmap)
+            axarr[i, 1].set_title("pred")
+            axarr[i, 1].set_axis_off()
+
+            res = axarr[i, 2].imshow(
+                self.resmaps[j],
+                vmin=self.vmin_resmap,
+                vmax=self.vmax_resmap,
+                cmap=self.cmap_resmap,
+            )
+            axarr[i, 2].set_title("resmap\n" + f"score = {self.scores[j]:.2E}")
+            axarr[i, 2].set_axis_off()
+            if self.color == "grayscale":
+                fig.colorbar(res, ax=axarr[i, 2])
+            if threshold is not None:
+                axarr[i, 3].imshow(self.resmaps[j] > threshold)
+                axarr[i, 3].set_title("segmentation")
+                axarr[i, 3].set_axis_off()
+        return
+
+    def generate_score_scatter_plot(self, generator):
+        fig = plt.figure(figsize=(15, 8))
+        for category in list(generator.class_indices.keys()):
+            indicies_cat = np.nonzero(
+                generator.classes == generator.class_indices[category]
+            )
+            scores = self.scores[indicies_cat]
+            if category == "good":
+                plt.scatter(indicies_cat, scores, alpha=0.5, marker="*", label=category)
+            else:
+                plt.scatter(indicies_cat, scores, alpha=0.5, marker=".", label=category)
+        plt.xlabel("image index")
+        plt.ylabel(self.method + "_score")
+        plt.legend()
+        return
 
     def plot_input_pred_resmap(self, index, group, save_dir=None):
         assert group in ["validation", "test"]
@@ -134,7 +210,7 @@ class TensorImages:
 
         im20 = axarr[2].imshow(
             self.resmaps[index],
-            cmap="inferno",
+            cmap=self.cmap_resmap,
             vmin=self.vmin_resmap,
             vmax=self.vmax_resmap,
         )
@@ -147,7 +223,8 @@ class TensorImages:
             + f"score = {self.scores[index]:.2E}"
         )
         axarr[2].set_axis_off()
-        fig.colorbar(im20, ax=axarr[2])
+        if self.color == "grayscale":
+            fig.colorbar(im20, ax=axarr[2])
 
         plt.suptitle(group.upper() + "\n" + self.filenames[index])
 
@@ -172,14 +249,15 @@ class TensorImages:
             vmax = self.vmax
         elif plot_type == "resmap":
             image = self.resmaps[index]
-            cmap = "inferno"
+            cmap = self.cmap_resmap
             vmin = self.vmin_resmap
             vmax = self.vmax_resmap
         # plot image
         fig, ax = plt.subplots(figsize=(5, 3))
         im = ax.imshow(image, cmap=cmap, vmin=vmin, vmax=vmax)
         ax.set_axis_off()
-        fig.colorbar(im)
+        if plot_type == "resmap":
+            fig.colorbar(im)
         title = plot_type + "\n" + self.filenames[index]
         plt.title(title)
         plt.show()
@@ -197,29 +275,48 @@ def get_plot_name(filename, suffix):
 ## Functions for generating Resmaps
 
 
-def calculate_resmaps(imgs_input, imgs_pred, method, dtype="float64"):
+def is_rgb(imgs):
+    return imgs.ndim == 4 and imgs.shape[-1] == 3
+
+
+def calculate_resmaps(
+    imgs_input, imgs_pred, color_resmap, method_resmap, dtype_resmap="float64"
+):
     """
     To calculate resmaps, input tensors must be grayscale and of shape (samples x length x width).
     """
-    # if RGB, transform to grayscale and reduce tensor dimension to 3
-    if imgs_input.ndim == 4 and imgs_input.shape[-1] == 3:
-        imgs_input_gray = tf.image.rgb_to_grayscale(imgs_input).numpy()[:, :, :, 0]
-        imgs_pred_gray = tf.image.rgb_to_grayscale(imgs_pred).numpy()[:, :, :, 0]
-    else:
-        imgs_input_gray = imgs_input
-        imgs_pred_gray = imgs_pred
+    # preprcess according to given parameters
+    if color_resmap == "grayscale":
+        multichannel = False
+        if is_rgb(imgs_input):
+            imgs_input_res = tf.image.rgb_to_grayscale(imgs_input).numpy()[:, :, :, 0]
+            imgs_pred_res = tf.image.rgb_to_grayscale(imgs_pred).numpy()[:, :, :, 0]
+        else:
+            imgs_input_res = imgs_input
+            imgs_pred_res = imgs_pred
+
+    elif color_resmap == "rgb":
+        if not is_rgb(imgs_input):
+            raise ValueError("imgs_input and imgs_pred have to be rgb.")
+        multichannel = True
+        imgs_input_res = imgs_input
+        imgs_pred_res = imgs_pred
 
     # calculate remaps
-    if method == "l2":
-        scores, resmaps = resmaps_l2(imgs_input_gray, imgs_pred_gray)
-    elif method in ["ssim", "mssim"]:
-        scores, resmaps = resmaps_ssim(imgs_input_gray, imgs_pred_gray)
-    if dtype == "uint8":
+    if method_resmap == "l2":
+        scores, resmaps = resmaps_l2(imgs_input_res, imgs_pred_res)
+    elif method_resmap == "ssim":
+        scores, resmaps = resmaps_ssim(imgs_input_res, imgs_pred_res, multichannel)
+    elif method_resmap == "abs":
+        scores, resmaps = resmaps_abs(imgs_input_res, imgs_pred_res)
+
+    # convert to uint8 if mentioned
+    if dtype_resmap == "uint8":
         resmaps = img_as_ubyte(resmaps)
     return scores, resmaps
 
 
-def resmaps_ssim(imgs_input, imgs_pred):
+def resmaps_ssim(imgs_input, imgs_pred, multichannel):
     resmaps = np.zeros(shape=imgs_input.shape, dtype="float64")
     scores = []
     for index in range(len(imgs_input)):
@@ -230,7 +327,7 @@ def resmaps_ssim(imgs_input, imgs_pred):
             img_pred,
             win_size=11,
             gaussian_weights=True,
-            multichannel=False,
+            multichannel=multichannel,
             sigma=1.5,
             full=True,
         )
@@ -238,12 +335,20 @@ def resmaps_ssim(imgs_input, imgs_pred):
         resmaps[index] = 1 - resmap
         scores.append(score)
     resmaps = np.clip(resmaps, a_min=-1, a_max=1)
+    scores = np.array(scores)
     return scores, resmaps
 
 
 def resmaps_l2(imgs_input, imgs_pred):
     resmaps = (imgs_input - imgs_pred) ** 2
-    scores = list(np.sqrt(np.sum(resmaps, axis=0)).flatten())
+    # scores = np.sqrt(np.sum(resmaps, axis=0)).flatten()
+    scores = np.sum(resmaps, axis=0).flatten()
+    return scores, resmaps
+
+
+def resmaps_abs(imgs_input, imgs_pred):
+    resmaps = np.abs(imgs_input - imgs_pred)
+    scores = np.sum(resmaps, axis=0).flatten()
     return scores, resmaps
 
 

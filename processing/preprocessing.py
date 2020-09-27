@@ -9,12 +9,13 @@ class Preprocessor:
     ):
         self.input_directory = input_directory
         self.train_data_dir = os.path.join(input_directory, "train")
+        self.val_data_dir = os.path.join(input_directory, "val")
         self.test_data_dir = os.path.join(input_directory, "test")
         self.rescale = rescale
         self.shape = shape
         self.color_mode = color_mode
         self.preprocessing_function = preprocessing_function
-        self.validation_split = config.VAL_SPLIT
+        # self.validation_split = config.VAL_SPLIT
 
         self.nb_val_images = None
         self.nb_test_images = None
@@ -44,7 +45,7 @@ class Preprocessor:
             # image data format, either "channels_first" or "channels_last"
             data_format="channels_last",
             # fraction of images reserved for validation (strictly between 0 and 1)
-            validation_split=self.validation_split,
+            # validation_split=self.validation_split,
         )
 
         # Generate training batches with datagen.flow_from_directory()
@@ -54,8 +55,8 @@ class Preprocessor:
             color_mode=self.color_mode,
             batch_size=batch_size,
             class_mode="input",
-            subset="training",
-            shuffle=True,
+            # subset="training",
+            shuffle=shuffle,
         )
         return train_generator
 
@@ -69,17 +70,17 @@ class Preprocessor:
         validation_datagen = ImageDataGenerator(
             rescale=self.rescale,
             data_format="channels_last",
-            validation_split=self.validation_split,
+            # validation_split=self.validation_split,
             preprocessing_function=self.preprocessing_function,
         )
         # Generate validation batches with datagen.flow_from_directory()
         validation_generator = validation_datagen.flow_from_directory(
-            directory=self.train_data_dir,
+            directory=self.val_data_dir,
             target_size=self.shape,
             color_mode=self.color_mode,
             batch_size=batch_size,
             class_mode="input",
-            subset="validation",
+            # subset="validation",
             shuffle=shuffle,
         )
         return validation_generator
