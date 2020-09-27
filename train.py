@@ -13,7 +13,6 @@ from processing.preprocessing import Preprocessor
 from processing.utils import printProgressBar as printProgressBar
 from processing import utils
 from processing import postprocessing
-import config
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -89,6 +88,12 @@ def main(args):
     autoencoder.save()
 
     if args.inspect:
+        # get inspection images' filenames
+        (
+            filenames_val_insp,
+            filenames_test_insp,
+        ) = utils.get_inspection_filenames_from_config(input_dir)
+
         # -------------- INSPECTING VALIDATION IMAGES --------------
         logger.info("generating inspection plots of validation images...")
 
@@ -123,7 +128,7 @@ def main(args):
         # generate and save inspection validation plots
         tensor_val.generate_inspection_plots(
             group="validation",
-            filenames_plot=config.FILENAMES_VAL_INSPECTION,
+            filenames_plot=filenames_val_insp,
             save_dir=inspection_val_dir,
         )
 
@@ -163,7 +168,7 @@ def main(args):
         # generate and save inspection test plots
         tensor_test.generate_inspection_plots(
             group="test",
-            filenames_plot=config.FILENAMES_TEST_INSPECTION,
+            filenames_plot=filenames_test_insp,
             save_dir=inspection_test_dir,
         )
 

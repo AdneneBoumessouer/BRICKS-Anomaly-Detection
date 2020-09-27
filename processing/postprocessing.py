@@ -49,7 +49,7 @@ class TensorImages:
     ):
         assert imgs_input.ndim == imgs_pred.ndim == 4
         assert dtype in ["float64", "uint8"]
-        assert method in ["l2", "ssim", "abs"]
+        assert method in ["l2", "ssim", "mssim", "abs"]
         self.color = color
         self.method = method
         self.dtype = dtype

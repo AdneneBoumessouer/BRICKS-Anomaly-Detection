@@ -14,12 +14,17 @@ from autoencoder.models.resnet.resnet import ResnetBuilder
 
 # Preprocessing variables
 RESCALE = 1 / 255
-SHAPE = (256, 256)
+# SHAPE = (256, 256)
+SHAPE = (512, 512)
 PREPROCESSING_FUNCTION = None
 PREPROCESSING = None
 VMIN = 0.0  # -1.0
 VMAX = 1.0
 DYNAMIC_RANGE = VMAX - VMIN
+
+# Training parameters
+EARLY_STOPPING = 6
+REDUCE_ON_PLATEAU = 3
 
 
 def build_model(color_mode):

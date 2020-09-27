@@ -225,7 +225,7 @@ def main(args):
             save_segmented_images(tensor_test.resmaps, threshold, filenames, save_dir)
 
         # print test_results to console
-        print("test results: {}".format(test_result))
+        logger.info("test results: {}".format(test_result))
 
 
 if __name__ == "__main__":

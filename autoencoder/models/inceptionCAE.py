@@ -30,6 +30,10 @@ VMIN = 0.0
 VMAX = 1.0
 DYNAMIC_RANGE = VMAX - VMIN
 
+# Training parameters
+EARLY_STOPPING = 12
+REDUCE_ON_PLATEAU = 6
+
 
 def inception_layer(x, filters):
     # 1x1 convolution

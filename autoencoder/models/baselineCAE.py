@@ -23,12 +23,17 @@ from tensorflow.keras import regularizers
 
 # Preprocessing parameters
 RESCALE = 1.0 / 255
-SHAPE = (256, 256)
+# SHAPE = (256, 256)
+SHAPE = (512, 512)
 PREPROCESSING_FUNCTION = None
 PREPROCESSING = None
 VMIN = 0.0
 VMAX = 1.0
 DYNAMIC_RANGE = VMAX - VMIN
+
+# Training parameters
+EARLY_STOPPING = 12
+REDUCE_ON_PLATEAU = 6
 
 
 def build_model(color_mode):
