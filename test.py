@@ -149,6 +149,7 @@ def main(args):
             imgs_pred=imgs_test_pred,
             vmin=vmin,
             vmax=vmax,
+            color="grayscale",
             method=method,
             dtype=dtype,
             filenames=filenames,
