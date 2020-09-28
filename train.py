@@ -56,6 +56,9 @@ def main(args):
     color_mode = args.color
     loss = args.loss
     batch_size = args.batch
+    epochs = args.epochs
+    lr_estimate = args.lr_estimate
+    policy = args.policy
 
     # check arguments
     check_arguments(architecture, color_mode, loss)
@@ -79,10 +82,10 @@ def main(args):
     )
 
     # find best learning rates for training
-    autoencoder.find_lr_opt(train_generator, validation_generator)
+    lr_opt = autoencoder.find_lr_opt(train_generator, validation_generator, lr_estimate)
 
     # train
-    autoencoder.fit(lr_opt=autoencoder.lr_opt)
+    autoencoder.fit(lr_opt=lr_opt, epochs=epochs, policy=policy)
 
     # save model
     autoencoder.save()
@@ -235,6 +238,38 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "-e",
+        "--epochs",
+        type=int,
+        required=False,
+        metavar="",
+        default=None,
+        help="Number of epochs to train",
+    )
+
+    parser.add_argument(
+        "-r",
+        "--lr-estimate",
+        type=str,
+        required=False,
+        metavar="",
+        choices=["custom", "ktrain"],
+        default="custom",
+        help="method to find optimal learning rate",
+    )
+
+    parser.add_argument(
+        "-p",
+        "--policy",
+        type=str,
+        required=False,
+        metavar="",
+        choices=["cyclic", "1cycle"],
+        default="cyclic",
+        help="learning rate policy to train with",
+    )
+
+    parser.add_argument(
         "-i",
         "--inspect",
         action="store_true",
@@ -257,3 +292,8 @@ if __name__ == "__main__":
 # python3 train.py -d LEGO_light/SV -a inceptionCAE -b 8 -l mssim -c rgb --inspect
 # python3 train.py -d LEGO_light/SV -a resnetCAE -b 8 -l mssim -c rgb --inspect
 # python3 train.py -d LEGO_light/SV -a skipCAE -b 8 -l mssim -c rgb --inspect
+
+# python3 train.py -d LEGO_light/SV -a mvtecCAE -b 8 -l l2 -c rgb -e 100 -r custom
+# python3 train.py -d LEGO_light/SV -a mvtecCAE -b 8 -l l2 -c rgb -e 100 -r ktrain
+# python3 train.py -d LEGO_light/SV -a mvtecCAE -b 8 -l l2 -c rgb -e 100 -r ktrain -p 1cycle
+
