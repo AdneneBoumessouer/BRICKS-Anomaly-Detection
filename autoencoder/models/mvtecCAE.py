@@ -15,6 +15,10 @@ VMIN = 0.0
 VMAX = 1.0
 DYNAMIC_RANGE = VMAX - VMIN
 
+# Training parameters
+EARLY_STOPPING = 6
+REDUCE_ON_PLATEAU = 3
+
 
 def build_model(color_mode):
     # set channels

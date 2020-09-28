@@ -10,6 +10,8 @@ from tensorflow import keras
 from autoencoder import metrics
 from autoencoder import losses
 
+import config
+
 
 def get_model_info(model_path):
     dir_name = os.path.dirname(model_path)
@@ -128,4 +130,12 @@ def save_dataframe_as_text_file(df, save_dir, filename):
     with open(os.path.join(save_dir, filename), "w+") as f:
         f.write(df.to_string(header=True, index=True))
         print("[INFO] validation_results.txt saved at {}".format(save_dir))
+
+
+def get_inspection_filenames_from_config(input_dir):
+    dataset_name = input_dir.split("/")[-1]
+    if dataset_name == "SV":
+        return config.SV_FILENAMES_VAL_INSPECTION, config.SV_FILENAMES_TEST_INSPECTION
+    elif dataset_name == "TV":
+        return config.TV_FILENAMES_VAL_INSPECTION, config.TV_FILENAMES_TEST_INSPECTION
 

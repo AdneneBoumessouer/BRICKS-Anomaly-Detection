@@ -26,6 +26,10 @@ VMIN = 0.0
 VMAX = 1.0
 DYNAMIC_RANGE = VMAX - VMIN
 
+# Training parameters
+EARLY_STOPPING = 6
+REDUCE_ON_PLATEAU = 3
+
 
 # Helper function to apply activation and batch normalization to the
 # output added with output of residual connection from the encoder

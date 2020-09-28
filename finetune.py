@@ -196,13 +196,17 @@ def main(args):
     )
 
     # compute largest anomaly areas in resmaps for increasing thresholds
-    print("step 1/2: computing largest anomaly areas for increasing thresholds...")
+    logger.info(
+        "step 1/2: computing largest anomaly areas for increasing thresholds..."
+    )
     largest_areas = calculate_largest_areas(
         resmaps=tensor_val.resmaps, thresholds=thresholds,
     )
 
     # select best minimum area and threshold pair to use for testing
-    print("step 2/2: selecting best minimum area and threshold pair for testing...")
+    logger.info(
+        "step 2/2: selecting best minimum area and threshold pair for testing..."
+    )
     printProgressBar(
         0, len(min_areas), prefix="Progress:", suffix="Complete", length=80
     )
@@ -273,7 +277,7 @@ def main(args):
         "dtype": dtype,
         "split": config.FINETUNE_SPLIT,
     }
-    print("finetuning results: {}".format(finetuning_result))
+    logger.info("finetuning results: {}".format(finetuning_result))
 
     # save validation result
     with open(os.path.join(save_dir, "finetuning_result.json"), "w") as json_file:
@@ -305,7 +309,9 @@ def plot_min_area_threshold(dict_finetune, index_best=None, save_dir=None):
         plt.show()
     if save_dir is not None:
         plt.savefig(os.path.join(save_dir, "min_area_threshold_plot.png"))
-        print("min_area threshold plot successfully saved at:\n {}".format(save_dir))
+        logger.info(
+            "min_area threshold plot successfully saved at:\n {}".format(save_dir)
+        )
         plt.close()
     return
 
@@ -323,7 +329,7 @@ def plot_scores(dict_finetune, index_best=None, save_dir=None):
         plt.show()
     if save_dir is not None:
         plt.savefig(os.path.join(save_dir, "scores_plot.png"))
-        print("scores plot successfully saved at:\n {}".format(save_dir))
+        logger.info("scores plot successfully saved at:\n {}".format(save_dir))
         plt.close()
     return
 

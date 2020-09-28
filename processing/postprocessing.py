@@ -49,7 +49,7 @@ class TensorImages:
     ):
         assert imgs_input.ndim == imgs_pred.ndim == 4
         assert dtype in ["float64", "uint8"]
-        assert method in ["l2", "ssim", "abs"]
+        assert method in ["l2", "ssim", "mssim", "abs"]
         self.color = color
         self.method = method
         self.dtype = dtype
@@ -84,7 +84,7 @@ class TensorImages:
 
         # set parameters for future segmentation of resmaps
         if dtype == "float64":
-            if method == "ssim":
+            if method in ["ssim", "mssim"]:
                 self.thresh_min = THRESH_MIN_FLOAT_SSIM
                 self.thresh_step = THRESH_STEP_FLOAT_SSIM
                 self.vmin_resmap = 0.0
@@ -101,7 +101,7 @@ class TensorImages:
                 self.vmax_resmap = 1.0
 
         elif dtype == "uint8":
-            if method == "ssim":
+            if method in ["ssim", "mssim"]:
                 self.thresh_min = THRESH_MIN_UINT8_SSIM
                 self.thresh_step = THRESH_STEP_UINT8_SSIM
                 self.vmin_resmap = 0
@@ -149,11 +149,15 @@ class TensorImages:
 
         fig, axarr = plt.subplots(nrows=nrows, ncols=ncols, figsize=(15, 5 * nrows))
         for i, j in enumerate(indicies):
-            axarr[i, 0].imshow(self.imgs_input[j], cmap=self.cmap)
+            axarr[i, 0].imshow(
+                self.imgs_input[j], vmin=self.vmin, vmax=self.vmax, cmap=self.cmap
+            )
             axarr[i, 0].set_title("input")
             axarr[i, 0].set_axis_off()
 
-            axarr[i, 1].imshow(self.imgs_pred[j], cmap=self.cmap)
+            axarr[i, 1].imshow(
+                self.imgs_pred[j], vmin=self.vmin, vmax=self.vmax, cmap=self.cmap
+            )
             axarr[i, 1].set_title("pred")
             axarr[i, 1].set_axis_off()
 
@@ -181,7 +185,14 @@ class TensorImages:
             )
             scores = self.scores[indicies_cat]
             if category == "good":
-                plt.scatter(indicies_cat, scores, alpha=0.5, marker="*", label=category)
+                plt.scatter(
+                    indicies_cat,
+                    scores,
+                    alpha=0.5,
+                    marker="s",
+                    # markersize=6,
+                    label=category,
+                )
             else:
                 plt.scatter(indicies_cat, scores, alpha=0.5, marker=".", label=category)
         plt.xlabel("image index")
@@ -305,7 +316,7 @@ def calculate_resmaps(
     # calculate remaps
     if method_resmap == "l2":
         scores, resmaps = resmaps_l2(imgs_input_res, imgs_pred_res)
-    elif method_resmap == "ssim":
+    elif method_resmap in ["ssim", "mssim"]:
         scores, resmaps = resmaps_ssim(imgs_input_res, imgs_pred_res, multichannel)
     elif method_resmap == "abs":
         scores, resmaps = resmaps_abs(imgs_input_res, imgs_pred_res)

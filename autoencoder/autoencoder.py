@@ -84,6 +84,9 @@ class AutoEncoder:
             self.vmin = mvtecCAE.VMIN
             self.vmax = mvtecCAE.VMAX
             self.dynamic_range = mvtecCAE.DYNAMIC_RANGE
+            # Training parameters
+            self.early_stopping = mvtecCAE.EARLY_STOPPING
+            self.reduce_on_plateau = mvtecCAE.REDUCE_ON_PLATEAU
 
         elif architecture == "baselineCAE":
             # Preprocessing parameters
@@ -95,6 +98,9 @@ class AutoEncoder:
             self.vmin = baselineCAE.VMIN
             self.vmax = baselineCAE.VMAX
             self.dynamic_range = baselineCAE.DYNAMIC_RANGE
+            # Training parameters
+            self.early_stopping = baselineCAE.EARLY_STOPPING
+            self.reduce_on_plateau = baselineCAE.REDUCE_ON_PLATEAU
 
         elif architecture == "inceptionCAE":
             # Preprocessing parameters
@@ -106,6 +112,9 @@ class AutoEncoder:
             self.vmin = inceptionCAE.VMIN
             self.vmax = inceptionCAE.VMAX
             self.dynamic_range = inceptionCAE.DYNAMIC_RANGE
+            # Training parameters
+            self.early_stopping = inceptionCAE.EARLY_STOPPING
+            self.reduce_on_plateau = inceptionCAE.REDUCE_ON_PLATEAU
 
         elif architecture == "resnetCAE":
             # Preprocessing parameters
@@ -117,6 +126,9 @@ class AutoEncoder:
             self.vmin = resnetCAE.VMIN
             self.vmax = resnetCAE.VMAX
             self.dynamic_range = resnetCAE.DYNAMIC_RANGE
+            # Training parameters
+            self.early_stopping = resnetCAE.EARLY_STOPPING
+            self.reduce_on_plateau = resnetCAE.REDUCE_ON_PLATEAU
 
         elif architecture == "skipCAE":
             # Preprocessing parameters
@@ -128,15 +140,14 @@ class AutoEncoder:
             self.vmin = skipCAE.VMIN
             self.vmax = skipCAE.VMAX
             self.dynamic_range = skipCAE.DYNAMIC_RANGE
+            # Training parameters
+            self.early_stopping = skipCAE.EARLY_STOPPING
+            self.reduce_on_plateau = skipCAE.REDUCE_ON_PLATEAU
 
         # Learning Rate Finder parameters
         self.start_lr = config.START_LR
         self.lr_max_epochs = config.LR_MAX_EPOCHS
         self.lrf_decrease_factor = config.LRF_DECREASE_FACTOR
-
-        # Training parameters
-        self.early_stopping = config.EARLY_STOPPING
-        self.reduce_on_plateau = config.REDUCE_ON_PLATEAU
 
         # verbosity
         self.verbose = verbose
