@@ -179,12 +179,22 @@ def main(args):
     return
 
 
-if __name__ == "__main__":
-    # create parser
+def print_info():
+    if tf.test.is_gpu_available():
+        print("GPU was detected...")
+    else:
+        print("No GPU was detected. CNNs can be very slow without a GPU...")
+    print("Tensorflow version: {} ...".format(tf.__version__))
+    print("Keras version: {} ...".format(keras.__version__))
+    return
+
+
+def create_parser():
     parser = argparse.ArgumentParser(
         description="Train an AutoEncoder on an image dataset.",
         epilog="Example usage: python3 train.py -d mvtec/capsule -a mvtec2 -b 8 -l ssim -c grayscale",
     )
+
     parser.add_argument(
         "-d",
         "--input-dir",
@@ -275,14 +285,15 @@ if __name__ == "__main__":
         action="store_true",
         help="generate inspection plots after training",
     )
+    return parser
 
+
+if __name__ == "__main__":
+    parser = create_parser()  # added
     args = parser.parse_args()
-    if tf.test.is_gpu_available():
-        logger.info("GPU was detected...")
-    else:
-        logger.info("No GPU was detected. CNNs can be very slow without a GPU...")
-    logger.info("Tensorflow version: {} ...".format(tf.__version__))
-    logger.info("Keras version: {} ...".format(keras.__version__))
+    print_info()
+
+    # run main function
     main(args)
 
 # Examples of commands to initiate training with mvtec architecture LEGO_light/SV
