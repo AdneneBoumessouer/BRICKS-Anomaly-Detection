@@ -2,7 +2,7 @@
 /LEGO_light/
 /LEGO_light_2/
 .vscode/
-# *.ipynb
+*.ipynb
 
 # remove this line after finishing project to upload data
 # saved_models/

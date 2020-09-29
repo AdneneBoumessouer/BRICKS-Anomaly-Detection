@@ -1,7 +1,7 @@
 # Data augmentation parameters (only for training)
-ROT_ANGLE = 5  # 5
-W_SHIFT_RANGE = 0.05  # 0.05
-H_SHIFT_RANGE = 0.05  # 0.05
+ROT_ANGLE = 8  # 5
+W_SHIFT_RANGE = 0.1  # 0.05
+H_SHIFT_RANGE = 0.1  # 0.05
 FILL_MODE = "nearest"
 BRIGHTNESS_RANGE = [0.95, 1.05]
 # VAL_SPLIT = 0.1

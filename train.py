@@ -210,7 +210,14 @@ def create_parser():
         type=str,
         required=False,
         metavar="",
-        choices=["mvtecCAE", "baselineCAE", "inceptionCAE", "resnetCAE", "skipCAE"],
+        choices=[
+            "anoCAE",
+            "mvtecCAE",
+            "baselineCAE",
+            "inceptionCAE",
+            "resnetCAE",
+            "skipCAE",
+        ],
         default="mvtec2",
         help="architecture of the model to use for training: 'mvtecCAE', 'baselineCAE', 'inceptionCAE', 'resnetCAE' or 'skipCAE'",
     )
@@ -298,6 +305,7 @@ if __name__ == "__main__":
 
 # Examples of commands to initiate training with mvtec architecture LEGO_light/SV
 
+# python3 train.py -d LEGO_light/SV -a anoCAE -b 8 -l mssim -c rgb --inspect
 # python3 train.py -d LEGO_light/SV -a mvtecCAE -b 8 -l mssim -c rgb --inspect
 # python3 train.py -d LEGO_light/SV -a baselineCAE -b 8 -l mssim -c rgb --inspect
 # python3 train.py -d LEGO_light/SV -a inceptionCAE -b 8 -l mssim -c rgb --inspect

@@ -87,13 +87,12 @@ def build_model(color_mode):
     x = MaxPooling2D((2, 2), padding="same")(x)
     # ---------------------------------------------------------------------------------
 
-    x = Flatten()(x)
-    x = Dense(encoding_dim, kernel_regularizer=regularizers.l2(1e-6))(x)
-    x = LeakyReLU(alpha=0.1)(x)
-    # encoded = x
+    # x = Flatten()(x)
+    # x = Dense(encoding_dim, kernel_regularizer=regularizers.l2(1e-6))(x)
+    # x = LeakyReLU(alpha=0.1)(x)
 
     # decoder
-    x = Reshape((4, 4, encoding_dim // 16))(x)
+    # x = Reshape((4, 4, encoding_dim // 16))(x)
     x = Conv2D(128, (3, 3), padding="same", kernel_regularizer=regularizers.l2(1e-6))(x)
     x = BatchNormalization()(x)
     x = LeakyReLU(alpha=0.1)(x)

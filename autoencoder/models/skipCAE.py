@@ -20,6 +20,7 @@ import numpy as np
 # Preprocessing parameters
 RESCALE = 1.0 / 255
 SHAPE = (256, 256)
+# SHAPE = (512, 512)
 PREPROCESSING_FUNCTION = None
 PREPROCESSING = None
 VMIN = 0.0

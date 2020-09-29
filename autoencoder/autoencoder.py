@@ -5,24 +5,23 @@ Created on Tue Dec 10 19:46:17 2019
 """
 import sys
 import os
-import shutil
 import datetime
 import json
-from pathlib import Path
 
 import tensorflow as tf
-from tensorflow import keras
 import ktrain
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from autoencoder.models import anoCAE
 from autoencoder.models import mvtecCAE
 from autoencoder.models import baselineCAE
 from autoencoder.models import inceptionCAE
 from autoencoder.models import resnetCAE
 from autoencoder.models import skipCAE
+
 from autoencoder import metrics
 from autoencoder import losses
 
@@ -74,6 +73,20 @@ class AutoEncoder:
         self.epochs_trained = None
 
         # build model and preprocessing variables
+        if architecture == "anoCAE":
+            # Preprocessing parameters
+            self.model = anoCAE.build_model(color_mode)
+            self.rescale = anoCAE.RESCALE
+            self.shape = anoCAE.SHAPE
+            self.preprocessing_function = anoCAE.PREPROCESSING_FUNCTION
+            self.preprocessing = anoCAE.PREPROCESSING
+            self.vmin = anoCAE.VMIN
+            self.vmax = anoCAE.VMAX
+            self.dynamic_range = anoCAE.DYNAMIC_RANGE
+            # Training parameters
+            self.early_stopping = anoCAE.EARLY_STOPPING
+            self.reduce_on_plateau = anoCAE.REDUCE_ON_PLATEAU
+
         if architecture == "mvtecCAE":
             # Preprocessing parameters
             self.model = mvtecCAE.build_model(color_mode)
@@ -258,7 +271,7 @@ class AutoEncoder:
 
     def fit(self, lr_opt, epochs, policy="cyclic"):
         # create tensorboard callback to monitor training
-        tensorboard_cb = keras.callbacks.TensorBoard(
+        tensorboard_cb = tf.keras.callbacks.TensorBoard(
             log_dir=self.log_dir, write_graph=True, update_freq="epoch"
         )
         # Print command to paste in browser for visualizing in Tensorboard
