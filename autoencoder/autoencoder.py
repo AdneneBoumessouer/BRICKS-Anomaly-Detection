@@ -5,24 +5,23 @@ Created on Tue Dec 10 19:46:17 2019
 """
 import sys
 import os
-import shutil
 import datetime
 import json
-from pathlib import Path
 
 import tensorflow as tf
-from tensorflow import keras
 import ktrain
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from autoencoder.models import anoCAE
 from autoencoder.models import mvtecCAE
 from autoencoder.models import baselineCAE
 from autoencoder.models import inceptionCAE
 from autoencoder.models import resnetCAE
 from autoencoder.models import skipCAE
+
 from autoencoder import metrics
 from autoencoder import losses
 
@@ -74,6 +73,20 @@ class AutoEncoder:
         self.epochs_trained = None
 
         # build model and preprocessing variables
+        if architecture == "anoCAE":
+            # Preprocessing parameters
+            self.model = anoCAE.build_model(color_mode)
+            self.rescale = anoCAE.RESCALE
+            self.shape = anoCAE.SHAPE
+            self.preprocessing_function = anoCAE.PREPROCESSING_FUNCTION
+            self.preprocessing = anoCAE.PREPROCESSING
+            self.vmin = anoCAE.VMIN
+            self.vmax = anoCAE.VMAX
+            self.dynamic_range = anoCAE.DYNAMIC_RANGE
+            # Training parameters
+            self.early_stopping = anoCAE.EARLY_STOPPING
+            self.reduce_on_plateau = anoCAE.REDUCE_ON_PLATEAU
+
         if architecture == "mvtecCAE":
             # Preprocessing parameters
             self.model = mvtecCAE.build_model(color_mode)
@@ -181,7 +194,7 @@ class AutoEncoder:
 
     ### Methods for training =================================================
 
-    def find_lr_opt(self, train_generator, validation_generator):
+    def find_lr_opt(self, train_generator, validation_generator, lr_estimate="custom"):
         # initialize learner object
         self.learner = ktrain.get_learner(
             model=self.model,
@@ -202,10 +215,16 @@ class AutoEncoder:
             show_plot=True,
             restore_weights_only=True,
         )
+        logger.info("learning rate finder complete...")
         self.ktrain_lr_estimate()
         self.custom_lr_estimate()
-        self.lr_find_plot(n_skip_beginning=10, n_skip_end=1, save=True)
-        return
+        self.lr_find_plot(n_skip_beginning=5, n_skip_end=1, save=True)
+        if lr_estimate == "custom":
+            logger.info("proceeding with custom lr estimate...")
+            return self.lr_opt
+        elif lr_estimate == "ktrain":
+            logger.info("proceeding with ktrain's lr estimate...")
+            return self.lr_ml_10
 
     def ktrain_lr_estimate(self):
         # get losses and learning rates
@@ -248,12 +267,11 @@ class AutoEncoder:
         # log to console
         logger.info(f"custom base learning rate: {lrs[self.lr_base_i]:.2E}")
         logger.info(f"custom optimal learning rate: {lrs[self.lr_opt_i]:.2E}")
-        logger.info("learning rate finder complete.")
         return
 
-    def fit(self, lr_opt):
+    def fit(self, lr_opt, epochs, policy="cyclic"):
         # create tensorboard callback to monitor training
-        tensorboard_cb = keras.callbacks.TensorBoard(
+        tensorboard_cb = tf.keras.callbacks.TensorBoard(
             log_dir=self.log_dir, write_graph=True, update_freq="epoch"
         )
         # Print command to paste in browser for visualizing in Tensorboard
@@ -264,20 +282,23 @@ class AutoEncoder:
         assert self.learner.model is self.model
 
         # fit model using Cyclical Learning Rates
-        self.hist = self.learner.autofit(
-            lr=lr_opt,
-            epochs=None,
-            early_stopping=self.early_stopping,
-            reduce_on_plateau=self.reduce_on_plateau,
-            reduce_factor=2,
-            cycle_momentum=True,
-            max_momentum=0.95,
-            min_momentum=0.85,
-            monitor="val_loss",
-            checkpoint_folder=None,
-            verbose=self.verbose,
-            callbacks=[tensorboard_cb],
-        )
+        if policy == "cyclic":
+            self.hist = self.learner.autofit(
+                lr=lr_opt,
+                epochs=epochs,
+                early_stopping=self.early_stopping,
+                reduce_on_plateau=self.reduce_on_plateau,
+                reduce_factor=2,
+                cycle_momentum=True,
+                max_momentum=0.95,
+                min_momentum=0.85,
+                monitor="val_loss",
+                checkpoint_folder=None,
+                verbose=self.verbose,
+                callbacks=[tensorboard_cb],
+            )
+        elif policy == "1cycle":
+            self.hist = self.learner.fit_onecycle(lr=lr_opt, epochs=epochs)
         return
 
     ### Methods to create directory structure and save (and load?) model =================

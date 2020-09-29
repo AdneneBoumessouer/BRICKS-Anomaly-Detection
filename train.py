@@ -56,6 +56,9 @@ def main(args):
     color_mode = args.color
     loss = args.loss
     batch_size = args.batch
+    epochs = args.epochs
+    lr_estimate = args.lr_estimate
+    policy = args.policy
 
     # check arguments
     check_arguments(architecture, color_mode, loss)
@@ -79,10 +82,10 @@ def main(args):
     )
 
     # find best learning rates for training
-    autoencoder.find_lr_opt(train_generator, validation_generator)
+    lr_opt = autoencoder.find_lr_opt(train_generator, validation_generator, lr_estimate)
 
     # train
-    autoencoder.fit(lr_opt=autoencoder.lr_opt)
+    autoencoder.fit(lr_opt=lr_opt, epochs=epochs, policy=policy)
 
     # save model
     autoencoder.save()
@@ -176,12 +179,22 @@ def main(args):
     return
 
 
-if __name__ == "__main__":
-    # create parser
+def print_info():
+    if tf.test.is_gpu_available():
+        print("GPU was detected...")
+    else:
+        print("No GPU was detected. CNNs can be very slow without a GPU...")
+    print("Tensorflow version: {} ...".format(tf.__version__))
+    print("Keras version: {} ...".format(keras.__version__))
+    return
+
+
+def create_parser():
     parser = argparse.ArgumentParser(
         description="Train an AutoEncoder on an image dataset.",
         epilog="Example usage: python3 train.py -d mvtec/capsule -a mvtec2 -b 8 -l ssim -c grayscale",
     )
+
     parser.add_argument(
         "-d",
         "--input-dir",
@@ -197,7 +210,14 @@ if __name__ == "__main__":
         type=str,
         required=False,
         metavar="",
-        choices=["mvtecCAE", "baselineCAE", "inceptionCAE", "resnetCAE", "skipCAE"],
+        choices=[
+            "anoCAE",
+            "mvtecCAE",
+            "baselineCAE",
+            "inceptionCAE",
+            "resnetCAE",
+            "skipCAE",
+        ],
         default="mvtec2",
         help="architecture of the model to use for training: 'mvtecCAE', 'baselineCAE', 'inceptionCAE', 'resnetCAE' or 'skipCAE'",
     )
@@ -235,25 +255,64 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "-e",
+        "--epochs",
+        type=int,
+        required=False,
+        metavar="",
+        default=None,
+        help="Number of epochs to train",
+    )
+
+    parser.add_argument(
+        "-r",
+        "--lr-estimate",
+        type=str,
+        required=False,
+        metavar="",
+        choices=["custom", "ktrain"],
+        default="custom",
+        help="method to find optimal learning rate",
+    )
+
+    parser.add_argument(
+        "-p",
+        "--policy",
+        type=str,
+        required=False,
+        metavar="",
+        choices=["cyclic", "1cycle"],
+        default="cyclic",
+        help="learning rate policy to train with",
+    )
+
+    parser.add_argument(
         "-i",
         "--inspect",
         action="store_true",
         help="generate inspection plots after training",
     )
+    return parser
 
+
+if __name__ == "__main__":
+    parser = create_parser()  # added
     args = parser.parse_args()
-    if tf.test.is_gpu_available():
-        logger.info("GPU was detected...")
-    else:
-        logger.info("No GPU was detected. CNNs can be very slow without a GPU...")
-    logger.info("Tensorflow version: {} ...".format(tf.__version__))
-    logger.info("Keras version: {} ...".format(keras.__version__))
+    print_info()
+
+    # run main function
     main(args)
 
 # Examples of commands to initiate training with mvtec architecture LEGO_light/SV
 
+# python3 train.py -d LEGO_light/SV -a anoCAE -b 8 -l mssim -c rgb --inspect
 # python3 train.py -d LEGO_light/SV -a mvtecCAE -b 8 -l mssim -c rgb --inspect
 # python3 train.py -d LEGO_light/SV -a baselineCAE -b 8 -l mssim -c rgb --inspect
 # python3 train.py -d LEGO_light/SV -a inceptionCAE -b 8 -l mssim -c rgb --inspect
 # python3 train.py -d LEGO_light/SV -a resnetCAE -b 8 -l mssim -c rgb --inspect
 # python3 train.py -d LEGO_light/SV -a skipCAE -b 8 -l mssim -c rgb --inspect
+
+# python3 train.py -d LEGO_light/SV -a mvtecCAE -b 8 -l l2 -c rgb -e 100 -r custom
+# python3 train.py -d LEGO_light/SV -a mvtecCAE -b 8 -l l2 -c rgb -e 100 -r ktrain
+# python3 train.py -d LEGO_light/SV -a mvtecCAE -b 8 -l l2 -c rgb -e 100 -r ktrain -p 1cycle
+
