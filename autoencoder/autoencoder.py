@@ -43,7 +43,7 @@ class AutoEncoder:
         verbose=True,
     ):
         # path attrivutes
-        self.input_directory = input_directory
+        self.input_dir = input_directory
         self.save_dir = None
         self.log_dir = None
 
@@ -309,7 +309,7 @@ class AutoEncoder:
         save_dir = os.path.join(
             os.getcwd(),
             "saved_models",
-            self.input_directory,
+            self.input_dir,
             self.architecture,
             self.loss,
             now,
@@ -362,7 +362,7 @@ class AutoEncoder:
     def get_info(self):
         info = {
             "data": {
-                "input_directory": self.input_directory,
+                "input_directory": self.input_dir,
                 "nb_training_images": self.learner.train_data.samples,
                 "nb_validation_images": self.learner.val_data.samples,
                 "validation_split": self.learner.train_data.image_data_generator._validation_split,

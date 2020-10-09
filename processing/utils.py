@@ -120,6 +120,10 @@ def printProgressBar(
         print()
 
 
+def is_rgb(imgs):
+    return imgs.ndim == 4 and imgs.shape[-1] == 3
+
+
 def generate_new_name(filename, suffix):
     filename_new, ext = os.path.splitext(filename)
     filename_new = "_".join(filename_new.split("/")) + "_" + suffix + ext

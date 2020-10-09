@@ -1,0 +1,129 @@
+import os
+import argparse
+from processing.preprocessing import Preprocessor
+from processing import utils
+from processing import postprocessing
+
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+def main(model_path=None):
+
+    # load model for inspection
+    logger.info("loading model for inspection...")
+    model, info, _ = utils.load_model_HDF5(model_path)
+    save_dir = os.path.dirname(model_path)
+
+    input_dir = info["data"]["input_directory"]
+    architecture = info["model"]["architecture"]
+    loss = info["model"]["loss"]
+    rescale = info["preprocessing"]["rescale"]
+    shape = info["preprocessing"]["shape"]
+    color_mode = info["preprocessing"]["color_mode"]
+    vmin = info["preprocessing"]["vmin"]
+    vmax = info["preprocessing"]["vmax"]
+    nb_validation_images = info["data"]["nb_validation_images"]
+    preprocessing_function = info["preprocessing"]["preprocessing"]
+
+    preprocessor = Preprocessor(
+        input_directory=input_dir,
+        rescale=rescale,
+        shape=shape,
+        color_mode=color_mode,
+        preprocessing_function=preprocessing_function,
+    )
+
+    # get inspection images' filenames
+    (
+        filenames_val_insp,
+        filenames_test_insp,
+    ) = utils.get_inspection_filenames_from_config(input_dir)
+
+    # -------------- INSPECTING VALIDATION IMAGES --------------
+    logger.info("generating inspection plots of validation images...")
+
+    # create a directory to save inspection plots
+    inspection_val_dir = os.path.join(save_dir, "inspection_val")
+    if not os.path.isdir(inspection_val_dir):
+        os.makedirs(inspection_val_dir)
+
+    inspection_val_generator = preprocessor.get_val_generator(
+        batch_size=nb_validation_images, shuffle=False
+    )
+
+    imgs_val_input = inspection_val_generator.next()[0]
+    filenames_val = inspection_val_generator.filenames
+
+    # get reconstructed images (i.e predictions) on validation dataset
+    logger.info("reconstructing validation images...")
+    imgs_val_pred = model.predict(imgs_val_input)
+
+    # instantiate TensorImages object to compute validation resmaps
+    postproc_val = postprocessing.Postprocessor(
+        imgs_input=imgs_val_input,
+        imgs_pred=imgs_val_pred,
+        filenames=filenames_val,
+        color="grayscale",
+        vmin=vmin,
+        vmax=vmax,
+    )
+
+    fig_val = postproc_val.generate_inspection_figure(filenames_val_insp)
+    fig_val.savefig(os.path.join(save_dir, "fig_insp_val.svg"))
+
+    # -------------- INSPECTING TEST IMAGES --------------
+    logger.info("generating inspection plots of test images...")
+
+    # create a directory to save inspection plots
+    inspection_test_dir = os.path.join(save_dir, "inspection_test")
+    if not os.path.isdir(inspection_test_dir):
+        os.makedirs(inspection_test_dir)
+
+    nb_test_images = preprocessor.get_total_number_test_images()
+
+    inspection_test_generator = preprocessor.get_test_generator(
+        batch_size=nb_test_images, shuffle=False
+    )
+
+    imgs_test_input = inspection_test_generator.next()[0]
+    filenames_test = inspection_test_generator.filenames
+
+    # get reconstructed images (i.e predictions) on validation dataset
+    logger.info("reconstructing test images...")
+    imgs_test_pred = model.predict(imgs_test_input)
+
+    # instantiate TensorImages object to compute test resmaps
+    postproc_test = postprocessing.Postprocessor(
+        imgs_input=imgs_test_input,
+        imgs_pred=imgs_test_pred,
+        filenames=filenames_test,
+        color="grayscale",
+        vmin=vmin,
+        vmax=vmax,
+    )
+
+    fig_test = postproc_test.generate_inspection_figure(filenames_test_insp)
+    fig_test.savefig(os.path.join(save_dir, "fig_insp_test.svg"))
+
+    return
+
+
+if __name__ == "__main__":
+    # create parser
+    parser = argparse.ArgumentParser(
+        description="Test model on some images for inspection.",
+        # epilog="Example usage: python3 inspection.py -d mvtec/capsule -a mvtec2 -b 8 -l ssim -c grayscale",
+    )
+    parser.add_argument(
+        "-p", "--path", type=str, required=True, metavar="", help="path to saved model"
+    )
+
+    # parse arguments
+    args = parser.parse_args()
+
+    # run main function
+    main(model_path=args.path)
+

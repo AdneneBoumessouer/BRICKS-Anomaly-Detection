@@ -13,6 +13,7 @@ from processing.preprocessing import Preprocessor
 from processing.utils import printProgressBar as printProgressBar
 from processing import utils
 from processing import postprocessing
+import inspection
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -90,91 +91,81 @@ def main(args):
     # save model
     autoencoder.save()
 
+    # if args.inspect:
+    #     # get inspection images' filenames
+    #     (
+    #         filenames_val_insp,
+    #         filenames_test_insp,
+    #     ) = utils.get_inspection_filenames_from_config(input_dir)
+
+    #     # -------------- INSPECTING VALIDATION IMAGES --------------
+    #     logger.info("generating inspection plots of validation images...")
+
+    #     # create a directory to save inspection plots
+    #     inspection_val_dir = os.path.join(autoencoder.save_dir, "inspection_val")
+    #     if not os.path.isdir(inspection_val_dir):
+    #         os.makedirs(inspection_val_dir)
+
+    #     inspection_val_generator = preprocessor.get_val_generator(
+    #         batch_size=autoencoder.learner.val_data.samples, shuffle=False
+    #     )
+
+    #     imgs_val_input = inspection_val_generator.next()[0]
+    #     filenames_val = inspection_val_generator.filenames
+
+    #     # get reconstructed images (i.e predictions) on validation dataset
+    #     logger.info("reconstructing validation images...")
+    #     imgs_val_pred = autoencoder.model.predict(imgs_val_input)
+
+    #     # instantiate TensorImages object to compute validation resmaps
+    #     postproc_val = postprocessing.Postprocessor(
+    #         imgs_input=imgs_val_input,
+    #         imgs_pred=imgs_val_pred,
+    #         filenames=filenames_val,
+    #         color="grayscale",
+    #         vmin=autoencoder.vmin,
+    #         vmax=autoencoder.vmax,
+    #     )
+
+    #     fig_val = postproc_val.generate_inspection_figure(filenames_val_insp)
+    #     fig_val.savefig(os.path.join(autoencoder.save_dir), "fig_insp_val.svg")
+
+    #     # -------------- INSPECTING TEST IMAGES --------------
+    #     logger.info("generating inspection plots of test images...")
+
+    #     # create a directory to save inspection plots
+    #     inspection_test_dir = os.path.join(autoencoder.save_dir, "inspection_test")
+    #     if not os.path.isdir(inspection_test_dir):
+    #         os.makedirs(inspection_test_dir)
+
+    #     nb_test_images = preprocessor.get_total_number_test_images()
+
+    #     inspection_test_generator = preprocessor.get_test_generator(
+    #         batch_size=nb_test_images, shuffle=False
+    #     )
+
+    #     imgs_test_input = inspection_test_generator.next()[0]
+    #     filenames_test = inspection_test_generator.filenames
+
+    #     # get reconstructed images (i.e predictions) on validation dataset
+    #     logger.info("reconstructing test images...")
+    #     imgs_test_pred = autoencoder.model.predict(imgs_test_input)
+
+    #     # instantiate TensorImages object to compute test resmaps
+    #     postproc_test = postprocessing.Postprocessor(
+    #         imgs_input=imgs_test_input,
+    #         imgs_pred=imgs_test_pred,
+    #         filenames=filenames_test,
+    #         color="grayscale",
+    #         vmin=autoencoder.vmin,
+    #         vmax=autoencoder.vmax,
+    #     )
+
+    #     fig_test = postproc_test.generate_inspection_figure(filenames_test_insp)
+    #     fig_test.savefig(os.path.join(autoencoder.save_dir), "fig_insp_test.svg")
+
     if args.inspect:
-        # get inspection images' filenames
-        (
-            filenames_val_insp,
-            filenames_test_insp,
-        ) = utils.get_inspection_filenames_from_config(input_dir)
-
-        # -------------- INSPECTING VALIDATION IMAGES --------------
-        logger.info("generating inspection plots of validation images...")
-
-        # create a directory to save inspection plots
-        inspection_val_dir = os.path.join(autoencoder.save_dir, "inspection_val")
-        if not os.path.isdir(inspection_val_dir):
-            os.makedirs(inspection_val_dir)
-
-        inspection_val_generator = preprocessor.get_val_generator(
-            batch_size=autoencoder.learner.val_data.samples, shuffle=False
-        )
-
-        imgs_val_input = inspection_val_generator.next()[0]
-        filenames_val = inspection_val_generator.filenames
-
-        # get reconstructed images (i.e predictions) on validation dataset
-        logger.info("reconstructing validation images...")
-        imgs_val_pred = autoencoder.model.predict(imgs_val_input)
-
-        # instantiate TensorImages object to compute validation resmaps
-        tensor_val = postprocessing.TensorImages(
-            imgs_input=imgs_val_input,
-            imgs_pred=imgs_val_pred,
-            vmin=autoencoder.vmin,
-            vmax=autoencoder.vmax,
-            color="grayscale",
-            method=autoencoder.loss,
-            dtype="float64",
-            filenames=filenames_val,
-        )
-
-        # generate and save inspection validation plots
-        tensor_val.generate_inspection_plots(
-            group="validation",
-            filenames_plot=filenames_val_insp,
-            save_dir=inspection_val_dir,
-        )
-
-        # -------------- INSPECTING TEST IMAGES --------------
-        logger.info("generating inspection plots of test images...")
-
-        # create a directory to save inspection plots
-        inspection_test_dir = os.path.join(autoencoder.save_dir, "inspection_test")
-        if not os.path.isdir(inspection_test_dir):
-            os.makedirs(inspection_test_dir)
-
-        nb_test_images = preprocessor.get_total_number_test_images()
-
-        inspection_test_generator = preprocessor.get_test_generator(
-            batch_size=nb_test_images, shuffle=False
-        )
-
-        imgs_test_input = inspection_test_generator.next()[0]
-        filenames_test = inspection_test_generator.filenames
-
-        # get reconstructed images (i.e predictions) on validation dataset
-        logger.info("reconstructing test images...")
-        imgs_test_pred = autoencoder.model.predict(imgs_test_input)
-
-        # instantiate TensorImages object to compute test resmaps
-        tensor_test = postprocessing.TensorImages(
-            imgs_input=imgs_test_input,
-            imgs_pred=imgs_test_pred,
-            vmin=autoencoder.vmin,
-            vmax=autoencoder.vmax,
-            color="grayscale",
-            method=autoencoder.loss,
-            dtype="float64",
-            filenames=filenames_test,
-        )
-
-        # generate and save inspection test plots
-        tensor_test.generate_inspection_plots(
-            group="test",
-            filenames_plot=filenames_test_insp,
-            save_dir=inspection_test_dir,
-        )
-
+        inspection.main(model_path=autoencoder.save_dir)
     logger.info("done.")
     return
 
