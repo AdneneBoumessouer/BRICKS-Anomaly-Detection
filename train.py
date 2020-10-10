@@ -1,18 +1,8 @@
-"""
-Created on Tue Dec 10 19:46:17 2019
-
-@author: Adnene Boumessouer
-"""
-
 import os
 import argparse
 import tensorflow as tf
-from tensorflow import keras
 from autoencoder.autoencoder import AutoEncoder
 from processing.preprocessing import Preprocessor
-from processing.utils import printProgressBar as printProgressBar
-from processing import utils
-from processing import postprocessing
 import inspection
 import logging
 
@@ -85,87 +75,15 @@ def main(args):
     # find best learning rates for training
     lr_opt = autoencoder.find_lr_opt(train_generator, validation_generator, lr_estimate)
 
-    # train
+    # train with optimal learning rate
     autoencoder.fit(lr_opt=lr_opt, epochs=epochs, policy=policy)
 
-    # save model
+    # save model and configuration
     autoencoder.save()
 
-    # if args.inspect:
-    #     # get inspection images' filenames
-    #     (
-    #         filenames_val_insp,
-    #         filenames_test_insp,
-    #     ) = utils.get_inspection_filenames_from_config(input_dir)
-
-    #     # -------------- INSPECTING VALIDATION IMAGES --------------
-    #     logger.info("generating inspection plots of validation images...")
-
-    #     # create a directory to save inspection plots
-    #     inspection_val_dir = os.path.join(autoencoder.save_dir, "inspection_val")
-    #     if not os.path.isdir(inspection_val_dir):
-    #         os.makedirs(inspection_val_dir)
-
-    #     inspection_val_generator = preprocessor.get_val_generator(
-    #         batch_size=autoencoder.learner.val_data.samples, shuffle=False
-    #     )
-
-    #     imgs_val_input = inspection_val_generator.next()[0]
-    #     filenames_val = inspection_val_generator.filenames
-
-    #     # get reconstructed images (i.e predictions) on validation dataset
-    #     logger.info("reconstructing validation images...")
-    #     imgs_val_pred = autoencoder.model.predict(imgs_val_input)
-
-    #     # instantiate TensorImages object to compute validation resmaps
-    #     postproc_val = postprocessing.Postprocessor(
-    #         imgs_input=imgs_val_input,
-    #         imgs_pred=imgs_val_pred,
-    #         filenames=filenames_val,
-    #         color="grayscale",
-    #         vmin=autoencoder.vmin,
-    #         vmax=autoencoder.vmax,
-    #     )
-
-    #     fig_val = postproc_val.generate_inspection_figure(filenames_val_insp)
-    #     fig_val.savefig(os.path.join(autoencoder.save_dir), "fig_insp_val.svg")
-
-    #     # -------------- INSPECTING TEST IMAGES --------------
-    #     logger.info("generating inspection plots of test images...")
-
-    #     # create a directory to save inspection plots
-    #     inspection_test_dir = os.path.join(autoencoder.save_dir, "inspection_test")
-    #     if not os.path.isdir(inspection_test_dir):
-    #         os.makedirs(inspection_test_dir)
-
-    #     nb_test_images = preprocessor.get_total_number_test_images()
-
-    #     inspection_test_generator = preprocessor.get_test_generator(
-    #         batch_size=nb_test_images, shuffle=False
-    #     )
-
-    #     imgs_test_input = inspection_test_generator.next()[0]
-    #     filenames_test = inspection_test_generator.filenames
-
-    #     # get reconstructed images (i.e predictions) on validation dataset
-    #     logger.info("reconstructing test images...")
-    #     imgs_test_pred = autoencoder.model.predict(imgs_test_input)
-
-    #     # instantiate TensorImages object to compute test resmaps
-    #     postproc_test = postprocessing.Postprocessor(
-    #         imgs_input=imgs_test_input,
-    #         imgs_pred=imgs_test_pred,
-    #         filenames=filenames_test,
-    #         color="grayscale",
-    #         vmin=autoencoder.vmin,
-    #         vmax=autoencoder.vmax,
-    #     )
-
-    #     fig_test = postproc_test.generate_inspection_figure(filenames_test_insp)
-    #     fig_test.savefig(os.path.join(autoencoder.save_dir), "fig_insp_test.svg")
-
+    # inspect validation and test images for visual assessement
     if args.inspect:
-        inspection.main(model_path=autoencoder.save_dir)
+        inspection.inspect_images(model_path=autoencoder.save_path)
     logger.info("done.")
     return
 
@@ -176,7 +94,7 @@ def print_info():
     else:
         print("No GPU was detected. CNNs can be very slow without a GPU...")
     print("Tensorflow version: {} ...".format(tf.__version__))
-    print("Keras version: {} ...".format(keras.__version__))
+    print("Keras version: {} ...".format(tf.keras.__version__))
     return
 
 

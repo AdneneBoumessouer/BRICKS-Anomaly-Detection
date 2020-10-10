@@ -10,8 +10,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def main(model_path=None):
-
+def inspect_images(model_path):
     # load model for inspection
     logger.info("loading model for inspection...")
     model, info, _ = utils.load_model_HDF5(model_path)
@@ -71,8 +70,10 @@ def main(model_path=None):
         vmax=vmax,
     )
 
-    fig_val = postproc_val.generate_inspection_figure(filenames_val_insp)
-    fig_val.savefig(os.path.join(save_dir, "fig_insp_val.svg"))
+    fig_res_val = postproc_val.generate_inspection_figure(
+        filenames_val_insp, model_path
+    )
+    fig_res_val.savefig(os.path.join(save_dir, "fig_insp_val.svg"))
 
     # -------------- INSPECTING TEST IMAGES --------------
     logger.info("generating inspection plots of test images...")
@@ -105,9 +106,15 @@ def main(model_path=None):
         vmax=vmax,
     )
 
-    fig_test = postproc_test.generate_inspection_figure(filenames_test_insp)
-    fig_test.savefig(os.path.join(save_dir, "fig_insp_test.svg"))
+    fig_res_test = postproc_test.generate_inspection_figure(
+        filenames_test_insp, model_path
+    )
+    fig_res_test.savefig(os.path.join(save_dir, "fig_insp_test.svg"))
 
+    fig_score_test = postproc_test.generate_score_scatter_plot(
+        inspection_test_generator, model_path
+    )
+    fig_score_test.savefig(os.path.join(save_dir, "fig_score_test.svg"))
     return
 
 
@@ -125,5 +132,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # run main function
-    main(model_path=args.path)
+    inspect_images(model_path=args.path)
 

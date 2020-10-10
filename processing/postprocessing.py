@@ -1,15 +1,11 @@
 import os
-import time
 import numpy as np
-import tensorflow as tf
 from processing.resmaps import Resmaps
 from processing.utils import printProgressBar, is_rgb
 import matplotlib.pyplot as plt
-from skimage.metrics import structural_similarity
 from skimage.segmentation import clear_border
 from skimage.measure import label, regionprops
 from skimage.morphology import closing, square
-from skimage.util import img_as_ubyte
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -71,7 +67,9 @@ class Postprocessor:
             dtype="float64",
         )
 
-    def generate_inspection_figure(self, filenames_plot=[]):
+    # Method for generating and plotting Resmaps for inspection
+
+    def generate_inspection_figure(self, filenames_plot=[], model_path=None):
         if filenames_plot != []:
             indicies = [self.filenames.index(filename) for filename in filenames_plot]
         else:
@@ -80,7 +78,11 @@ class Postprocessor:
         nrows = len(indicies)
         ncols = 5
 
+        printProgressBar(0, nrows, prefix="Progress:", suffix="Complete", length=80)
+
         fig, axarr = plt.subplots(nrows=nrows, ncols=ncols, figsize=(25, 5 * nrows))
+        if model_path:
+            fig.suptitle(model_path, fontsize=16)
         for i, j in enumerate(indicies):
             axarr[i, 0].imshow(
                 self.imgs_input[j], vmin=self.vmin, vmax=self.vmax, cmap=None
@@ -131,7 +133,38 @@ class Postprocessor:
             axarr[i, 4].set_axis_off()
             if self.R_l2.color == "grayscale":
                 fig.colorbar(res_l2, ax=axarr[i, 4])
+
             plt.tight_layout()
+
+            printProgressBar(
+                i + 1, nrows, prefix="Progress:", suffix="Complete", length=80
+            )
+        return fig
+
+    # Method for plotting Resmaps' scores for inspection
+
+    def generate_score_scatter_plot(self, generator_test, model_path=None):
+        # fig = plt.figure(figsize=(15, 8))
+        R_list = [self.R_ssim, self.R_l1, self.R_l2]
+        method_list = ["ssim", "l1", "l2"]
+        with plt.style.context("dark_background"):
+            fig, axarr = plt.subplots(nrows=3, ncols=1, figsize=(15, 24))
+            if model_path:
+                fig.suptitle(model_path, fontsize=16)
+            for i, (R, method) in enumerate(list(zip(R_list, method_list))):
+                for category in list(generator_test.class_indices.keys()):
+                    indicies_cat = np.nonzero(
+                        generator_test.classes == generator_test.class_indices[category]
+                    )
+                    scores = R.scores[indicies_cat]
+                    marker = "s" if category == "good" else "."
+                    # markersize = 6 if category == "good" else 4
+                    axarr[i].scatter(
+                        indicies_cat, scores, alpha=0.5, marker=marker, label=category
+                    )
+                axarr[i].set_xlabel("image index")
+                axarr[i].set_ylabel(method.upper() + "_score")
+                axarr[i].legend()
         return fig
 
 

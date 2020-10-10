@@ -1,30 +1,19 @@
-"""
-Created on Tue Dec 10 19:46:17 2019
-
-@author: Adnene Boumessouer
-"""
-import sys
 import os
 import datetime
 import json
-
-import tensorflow as tf
-import ktrain
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
+import tensorflow as tf
+import ktrain
 from autoencoder.models import anoCAE
 from autoencoder.models import mvtecCAE
 from autoencoder.models import baselineCAE
 from autoencoder.models import inceptionCAE
 from autoencoder.models import resnetCAE
 from autoencoder.models import skipCAE
-
 from autoencoder import metrics
 from autoencoder import losses
-
 import config
 import logging
 
@@ -333,7 +322,8 @@ class AutoEncoder:
 
     def save(self):
         # save model
-        self.model.save(os.path.join(self.save_dir, self.create_model_name()))
+        self.save_path = os.path.join(self.save_dir, self.create_model_name())
+        self.model.save(self.save_path)
         # save trainnig info
         info = self.get_info()
         with open(os.path.join(self.save_dir, "info.json"), "w") as json_file:

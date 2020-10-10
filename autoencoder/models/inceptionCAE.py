@@ -5,17 +5,13 @@ Model inspired by: https://github.com/natasasdj/anomalyDetection
 import tensorflow as tf
 from tensorflow.keras.layers import (
     Input,
-    Dense,
     Conv2D,
     MaxPooling2D,
     UpSampling2D,
     BatchNormalization,
-    GlobalAveragePooling2D,
     LeakyReLU,
     Activation,
     concatenate,
-    Flatten,
-    Reshape,
 )
 from tensorflow.keras.models import Model
 from tensorflow.keras import regularizers

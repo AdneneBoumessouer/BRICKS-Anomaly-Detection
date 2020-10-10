@@ -1,5 +1,6 @@
 """
-Model inspired by https://github.com/ktjktj0911/MVTEC-anomaly-detection/blob/master/model2.ipynb
+Model inspired by: 
+https://github.com/ktjktj0911/MVTEC-anomaly-detection/blob/master/model2.ipynb
 """
 
 from tensorflow.keras.layers import (
@@ -7,10 +8,7 @@ from tensorflow.keras.layers import (
     Conv2D,
     MaxPooling2D,
     Conv2DTranspose,
-    concatenate,
-    BatchNormalization,
     Dense,
-    UpSampling2D,
     ZeroPadding2D,
     Flatten,
     Dense,

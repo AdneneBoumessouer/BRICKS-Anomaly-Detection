@@ -2,14 +2,9 @@ import os
 import json
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-
 import tensorflow as tf
-from tensorflow import keras
-
 from autoencoder import metrics
 from autoencoder import losses
-
 import config
 
 
@@ -32,10 +27,10 @@ def load_model_HDF5(model_path):
 
     # load autoencoder
     if loss == "mssim":
-        model = keras.models.load_model(
+        model = tf.keras.models.load_model(
             filepath=model_path,
             custom_objects={
-                "LeakyReLU": keras.layers.LeakyReLU,
+                "LeakyReLU": tf.keras.layers.LeakyReLU,
                 "loss": losses.mssim_loss(dynamic_range),
                 "mssim": metrics.mssim_metric(dynamic_range),
             },
@@ -43,10 +38,10 @@ def load_model_HDF5(model_path):
         )
 
     elif loss == "ssim":
-        model = keras.models.load_model(
+        model = tf.keras.models.load_model(
             filepath=model_path,
             custom_objects={
-                "LeakyReLU": keras.layers.LeakyReLU,
+                "LeakyReLU": tf.keras.layers.LeakyReLU,
                 "loss": losses.ssim_loss(dynamic_range),
                 "ssim": metrics.ssim_metric(dynamic_range),
             },
@@ -54,10 +49,10 @@ def load_model_HDF5(model_path):
         )
 
     else:
-        model = keras.models.load_model(
+        model = tf.keras.models.load_model(
             filepath=model_path,
             custom_objects={
-                "LeakyReLU": keras.layers.LeakyReLU,
+                "LeakyReLU": tf.keras.layers.LeakyReLU,
                 "l2_loss": losses.l2_loss,
                 "ssim": losses.ssim_loss(dynamic_range),
                 "mssim": metrics.mssim_metric(dynamic_range),

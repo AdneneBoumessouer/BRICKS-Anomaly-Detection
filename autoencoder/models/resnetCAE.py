@@ -1,15 +1,12 @@
-from tensorflow import keras
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import (
     Add,
     ReLU,
     Conv2D,
     Conv2DTranspose,
-    MaxPooling2D,
     BatchNormalization,
     Activation,
 )
-from tensorflow.keras.regularizers import l2
 from autoencoder.models.resnet.resnet import ResnetBuilder
 
 # Preprocessing variables

@@ -10,10 +10,8 @@ from tensorflow.keras.layers import (
     MaxPooling2D,
     UpSampling2D,
     BatchNormalization,
-    GlobalAveragePooling2D,
     LeakyReLU,
     Activation,
-    concatenate,
     Flatten,
     Reshape,
 )
