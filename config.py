@@ -17,6 +17,9 @@ STEP_MIN_AREA = 5
 START_MIN_AREA = 5
 STOP_MIN_AREA = 1005
 
+# path to save model
+saved_models_path = "saved_models"
+
 # Inspection val and test image filenames for SV dataset
 SV_FILENAMES_VAL_INSPECTION = [
     "good/004.png",

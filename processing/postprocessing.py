@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from processing.resmaps import Resmaps
+from processing.resmaps import ResmapCalculator
 from processing.utils import printProgressBar, is_rgb
 import matplotlib.pyplot as plt
 from skimage.segmentation import clear_border
@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class Postprocessor:
+class ResmapPlotter:
     def __init__(
         self, imgs_input, imgs_pred, filenames, color="grayscale", vmin=0.0, vmax=1.0,
     ):
@@ -23,7 +23,7 @@ class Postprocessor:
         self.vmax = vmax
 
         if color == "grayscale":
-            self.R_ssim = Resmaps(
+            self.RC_ssim = ResmapCalculator(
                 imgs_input=imgs_input,
                 imgs_pred=imgs_pred,
                 color="grayscale",
@@ -34,7 +34,7 @@ class Postprocessor:
                 dtype="float64",
             )
         else:
-            self.R_ssim = Resmaps(
+            self.RC_ssim = ResmapCalculator(
                 imgs_input=imgs_input,
                 imgs_pred=imgs_pred,
                 color="rgb",
@@ -45,7 +45,7 @@ class Postprocessor:
                 dtype="float64",
             )
 
-        self.R_l1 = Resmaps(
+        self.RC_l1 = ResmapCalculator(
             imgs_input=imgs_input,
             imgs_pred=imgs_pred,
             color=color,
@@ -56,7 +56,7 @@ class Postprocessor:
             dtype="float64",
         )
 
-        self.R_l2 = Resmaps(
+        self.RC_l2 = ResmapCalculator(
             imgs_input=imgs_input,
             imgs_pred=imgs_pred,
             color=color,
@@ -81,8 +81,8 @@ class Postprocessor:
         printProgressBar(0, nrows, prefix="Progress:", suffix="Complete", length=80)
 
         fig, axarr = plt.subplots(nrows=nrows, ncols=ncols, figsize=(25, 5 * nrows))
-        if model_path:
-            fig.suptitle(model_path, fontsize=16)
+        # if model_path:
+        #     fig.suptitle(model_path + "\n", fontsize=20)
         for i, j in enumerate(indicies):
             axarr[i, 0].imshow(
                 self.imgs_input[j], vmin=self.vmin, vmax=self.vmax, cmap=None
@@ -98,40 +98,40 @@ class Postprocessor:
 
             # resmap ssim gray
             res_ssim = axarr[i, 2].imshow(
-                X=self.R_ssim.resmaps[j],
-                vmin=self.R_ssim.vmin_resmap,
-                vmax=self.R_ssim.vmax_resmap,
-                cmap=self.R_ssim.cmap_resmap,
+                X=self.RC_ssim.resmaps[j],
+                vmin=self.RC_ssim.vmin_resmap,
+                vmax=self.RC_ssim.vmax_resmap,
+                cmap=self.RC_ssim.cmap_resmap,
             )
             axarr[i, 2].set_title(
-                "Resmap SSIM\n" + f"score = {self.R_ssim.scores[j]:.2E}"
+                "Resmap SSIM\n" + f"score = {self.RC_ssim.scores[j]:.2E}"
             )
             axarr[i, 2].set_axis_off()
-            if self.R_ssim.color == "grayscale":
+            if self.RC_ssim.color == "grayscale":
                 fig.colorbar(res_ssim, ax=axarr[i, 2])
 
             # resmap l1 gray
             res_l1 = axarr[i, 3].imshow(
-                X=self.R_l1.resmaps[j],
-                vmin=self.R_l1.vmin_resmap,
-                vmax=self.R_l1.vmax_resmap,
-                cmap=self.R_l1.cmap_resmap,
+                X=self.RC_l1.resmaps[j],
+                vmin=self.RC_l1.vmin_resmap,
+                vmax=self.RC_l1.vmax_resmap,
+                cmap=self.RC_l1.cmap_resmap,
             )
-            axarr[i, 3].set_title("Resmap_L1\n" + f"score = {self.R_l1.scores[j]:.2E}")
+            axarr[i, 3].set_title("Resmap_L1\n" + f"score = {self.RC_l1.scores[j]:.2E}")
             axarr[i, 3].set_axis_off()
-            if self.R_l1.color == "grayscale":
+            if self.RC_l1.color == "grayscale":
                 fig.colorbar(res_l1, ax=axarr[i, 3])
 
             # resmap l2 gray
             res_l2 = axarr[i, 4].imshow(
-                X=self.R_l2.resmaps[j],
-                vmin=self.R_l2.vmin_resmap,
-                vmax=self.R_l2.vmax_resmap,
-                cmap=self.R_l2.cmap_resmap,
+                X=self.RC_l2.resmaps[j],
+                vmin=self.RC_l2.vmin_resmap,
+                vmax=self.RC_l2.vmax_resmap,
+                cmap=self.RC_l2.cmap_resmap,
             )
-            axarr[i, 4].set_title("Resmap_L2\n" + f"score = {self.R_l2.scores[j]:.2E}")
+            axarr[i, 4].set_title("Resmap_L2\n" + f"score = {self.RC_l2.scores[j]:.2E}")
             axarr[i, 4].set_axis_off()
-            if self.R_l2.color == "grayscale":
+            if self.RC_l2.color == "grayscale":
                 fig.colorbar(res_l2, ax=axarr[i, 4])
 
             plt.tight_layout()
@@ -143,9 +143,17 @@ class Postprocessor:
 
     # Method for plotting Resmaps' scores for inspection
 
-    def generate_score_scatter_plot(self, generator_test, model_path=None):
-        # fig = plt.figure(figsize=(15, 8))
-        R_list = [self.R_ssim, self.R_l1, self.R_l2]
+    def generate_score_scatter_plot(
+        self, generator_test, model_path=None, filenames_plot=[]
+    ):
+        if filenames_plot != []:
+            indicies_to_plot = [
+                self.filenames.index(filename) for filename in filenames_plot
+            ]
+        else:
+            indicies_to_plot = list(range(len(self.imgs_input)))
+
+        R_list = [self.RC_ssim, self.RC_l1, self.RC_l2]
         method_list = ["ssim", "l1", "l2"]
         with plt.style.context("dark_background"):
             fig, axarr = plt.subplots(nrows=3, ncols=1, figsize=(15, 24))
@@ -155,7 +163,11 @@ class Postprocessor:
                 for category in list(generator_test.class_indices.keys()):
                     indicies_cat = np.nonzero(
                         generator_test.classes == generator_test.class_indices[category]
-                    )
+                    )[0]
+                    if filenames_plot != []:
+                        indicies_cat = list(
+                            set.intersection(set(indicies_cat), set(indicies_to_plot))
+                        )
                     scores = R.scores[indicies_cat]
                     marker = "s" if category == "good" else "."
                     # markersize = 6 if category == "good" else 4
@@ -172,24 +184,6 @@ class Postprocessor:
 
 
 def label_images(images_th):
-    """
-    Segments images into images of connected components (regions).
-    Returns segmented images and a list of lists, where each list 
-    contains the areas of the regions of the corresponding image. 
-    
-    Parameters
-    ----------
-    images_th : array of binary images
-        Thresholded residual maps.
-
-    Returns
-    -------
-    images_labeled : array of labeled images
-        Labeled images.
-    areas_all : list of lists
-        List of lists, where each list contains the areas of the regions of the corresponding image.
-
-    """
     images_labeled = np.zeros(shape=images_th.shape)
     areas_all = []
     for i, image_th in enumerate(images_th):

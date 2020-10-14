@@ -297,7 +297,8 @@ class AutoEncoder:
         now = datetime.datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
         save_dir = os.path.join(
             os.getcwd(),
-            "saved_models",
+            # "saved_models",
+            config.saved_models_path,
             self.input_dir,
             self.architecture,
             self.loss,

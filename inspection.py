@@ -17,8 +17,8 @@ def inspect_images(model_path):
     save_dir = os.path.dirname(model_path)
 
     input_dir = info["data"]["input_directory"]
-    architecture = info["model"]["architecture"]
-    loss = info["model"]["loss"]
+    # architecture = info["model"]["architecture"]
+    # loss = info["model"]["loss"]
     rescale = info["preprocessing"]["rescale"]
     shape = info["preprocessing"]["shape"]
     color_mode = info["preprocessing"]["color_mode"]
@@ -57,11 +57,10 @@ def inspect_images(model_path):
     filenames_val = inspection_val_generator.filenames
 
     # get reconstructed images (i.e predictions) on validation dataset
-    logger.info("reconstructing validation images...")
     imgs_val_pred = model.predict(imgs_val_input)
 
-    # instantiate TensorImages object to compute validation resmaps
-    postproc_val = postprocessing.Postprocessor(
+    # instantiate ResmapPlotter object to compute validation resmaps
+    postproc_val = postprocessing.ResmapPlotter(
         imgs_input=imgs_val_input,
         imgs_pred=imgs_val_pred,
         filenames=filenames_val,
@@ -93,11 +92,10 @@ def inspect_images(model_path):
     filenames_test = inspection_test_generator.filenames
 
     # get reconstructed images (i.e predictions) on validation dataset
-    logger.info("reconstructing test images...")
     imgs_test_pred = model.predict(imgs_test_input)
 
-    # instantiate TensorImages object to compute test resmaps
-    postproc_test = postprocessing.Postprocessor(
+    # instantiate ResmapPlotter object to compute test resmaps
+    postproc_test = postprocessing.ResmapPlotter(
         imgs_input=imgs_test_input,
         imgs_pred=imgs_test_pred,
         filenames=filenames_test,
@@ -111,6 +109,11 @@ def inspect_images(model_path):
     )
     fig_res_test.savefig(os.path.join(save_dir, "fig_insp_test.svg"))
 
+    fig_score_insp = postproc_test.generate_score_scatter_plot(
+        inspection_test_generator, model_path, filenames_test_insp
+    )
+    fig_score_insp.savefig(os.path.join(save_dir, "fig_score_insp.svg"))
+
     fig_score_test = postproc_test.generate_score_scatter_plot(
         inspection_test_generator, model_path
     )
@@ -122,7 +125,6 @@ if __name__ == "__main__":
     # create parser
     parser = argparse.ArgumentParser(
         description="Test model on some images for inspection.",
-        # epilog="Example usage: python3 inspection.py -d mvtec/capsule -a mvtec2 -b 8 -l ssim -c grayscale",
     )
     parser.add_argument(
         "-p", "--path", type=str, required=True, metavar="", help="path to saved model"

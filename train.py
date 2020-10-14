@@ -31,14 +31,6 @@ Mode    ----------------+----------------+----------------+
 """
 
 
-def check_arguments(architecture, color_mode, loss):
-    if loss == "mssim" and color_mode == "grayscale":
-        raise ValueError("MSSIM works only with rgb images")
-    if loss == "ssim" and color_mode == "rgb":
-        raise ValueError("SSIM works only with grayscale images")
-    return
-
-
 def main(args):
 
     # get parsed arguments from user
@@ -85,6 +77,14 @@ def main(args):
     if args.inspect:
         inspection.inspect_images(model_path=autoencoder.save_path)
     logger.info("done.")
+    return
+
+
+def check_arguments(architecture, color_mode, loss):
+    if loss == "mssim" and color_mode == "grayscale":
+        raise ValueError("MSSIM works only with rgb images")
+    if loss == "ssim" and color_mode == "rgb":
+        raise ValueError("SSIM works only with grayscale images")
     return
 
 

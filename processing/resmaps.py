@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class Resmaps:
+class ResmapCalculator:
     def __init__(
         self,
         imgs_input,
@@ -23,9 +23,9 @@ class Resmaps:
         dtype="float64",
     ):
         assert imgs_input.ndim == imgs_pred.ndim == 4
-        assert dtype in ["float64", "uint8"]
         assert method in ["l1", "l2", "ssim", "mssim"]
         assert color in ["grayscale", "rgb"]
+        assert dtype in ["float64", "uint8"]
 
         if method == "mssim" and (not is_rgb(imgs_input) or color == "grayscale"):
             raise ValueError("mssim method incompatible with grayscale")
@@ -42,18 +42,15 @@ class Resmaps:
         self.vmax = vmax
 
         # if grayscale, reduce dim to (samples x length x width)
-        # if imgs_input.shape[-1] == 1:
-        if not is_rgb(imgs_input):
+        if imgs_input.ndim == 4 and imgs_input.shape[-1] == 1:
             imgs_input = imgs_input[:, :, :, 0]
             imgs_pred = imgs_pred[:, :, :, 0]
 
         self.cmap_resmap = "inferno" if self.color == "grayscale" else None
 
         # compute resmaps
-        self.imgs_input = imgs_input
-        self.imgs_pred = imgs_pred
         self.scores, self.resmaps = calculate_resmaps(
-            self.imgs_input, self.imgs_pred, color, method, dtype
+            imgs_input, imgs_pred, color, method, dtype
         )
 
         # set parameters for future segmentation of resmaps
@@ -88,7 +85,7 @@ def calculate_resmaps(
 
     elif color_resmap == "rgb":
         if not is_rgb(imgs_input):
-            raise ValueError("imgs_input and imgs_pred have to be rgb.")
+            raise ValueError("input images are not rgb.")
         # multichannel = True
         imgs_input_res = imgs_input
         imgs_pred_res = imgs_pred
@@ -161,7 +158,6 @@ def resmaps_l1(imgs_input, imgs_pred):
 
 def resmaps_l2(imgs_input, imgs_pred):
     resmaps = (imgs_input - imgs_pred) ** 2
-    # scores = np.sqrt(np.sum(resmaps, axis=0)).flatten()
     scores = np.sum(resmaps, axis=0).flatten()
     return scores, resmaps
 
