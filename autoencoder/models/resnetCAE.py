@@ -1,21 +1,18 @@
-from tensorflow import keras
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import (
     Add,
     ReLU,
     Conv2D,
     Conv2DTranspose,
-    MaxPooling2D,
     BatchNormalization,
     Activation,
 )
-from tensorflow.keras.regularizers import l2
 from autoencoder.models.resnet.resnet import ResnetBuilder
 
 # Preprocessing variables
 RESCALE = 1 / 255
-# SHAPE = (256, 256)
-SHAPE = (512, 512)
+SHAPE = (256, 256)
+# SHAPE = (512, 512)
 PREPROCESSING_FUNCTION = None
 PREPROCESSING = None
 VMIN = 0.0  # -1.0

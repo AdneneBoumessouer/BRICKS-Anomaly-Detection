@@ -22,6 +22,69 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Finetuning parameters
+FINETUNE_SPLIT = 0.1
+STEP_MIN_AREA = 5
+START_MIN_AREA = 5
+STOP_MIN_AREA = 1005
+
+# Segmentation Parameters
+# float + SSIM
+THRESH_MIN_FLOAT_SSIM = 0.10
+THRESH_STEP_FLOAT_SSIM = 0.002
+# float + L2
+THRESH_MIN_FLOAT_L2 = 0.005
+THRESH_STEP_FLOAT_L2 = 0.0005
+# float + ABS
+THRESH_MIN_FLOAT_ABS = 0.05
+THRESH_STEP_FLOAT_ABS = 0.005
+# uint8 + SSIM
+THRESH_MIN_UINT8_SSIM = 20
+THRESH_STEP_UINT8_SSIM = 1
+# uint8 + L2 (generally uneffective combination)
+THRESH_MIN_UINT8_L2 = 5
+THRESH_STEP_UINT8_L2 = 1
+# uint8 + ABS (generally uneffective combination)
+THRESH_MIN_UINT8_ABS = 10
+THRESH_STEP_UINT8_ABS = 1
+
+
+class FineTuner:
+    def __init__(self, resmaps, color, method, dtype="float64", filenames=None):
+        if dtype == "float64":
+            if method in ["ssim", "mssim"]:
+                self.thresh_min = THRESH_MIN_FLOAT_SSIM
+                self.thresh_step = THRESH_STEP_FLOAT_SSIM
+                # self.vmin_resmap = 0.0
+                # self.vmax_resmap = 1.0
+            elif method == "l2":
+                self.thresh_min = THRESH_MIN_FLOAT_L2
+                self.thresh_step = THRESH_STEP_FLOAT_L2
+                self.vmin_resmap = 0.0
+                self.vmax_resmap = np.amax(self.resmaps)
+            elif method == "abs":
+                self.thresh_min = THRESH_MIN_FLOAT_ABS
+                self.thresh_step = THRESH_STEP_FLOAT_ABS
+                # self.vmin_resmap = 0.0
+                # self.vmax_resmap = 1.0
+
+        elif dtype == "uint8":
+            if method in ["ssim", "mssim"]:
+                self.thresh_min = THRESH_MIN_UINT8_SSIM
+                self.thresh_step = THRESH_STEP_UINT8_SSIM
+                # self.vmin_resmap = 0
+                # self.vmax_resmap = 255
+            elif method == "l2":
+                self.thresh_min = THRESH_MIN_UINT8_L2
+                self.thresh_step = THRESH_STEP_UINT8_L2
+                # self.vmin_resmap = 0
+                # self.vmax_resmap = np.amax(self.resmaps)
+            elif method == "abs":
+                self.thresh_min = THRESH_MIN_UINT8_ABS
+                self.thresh_step = THRESH_STEP_UINT8_ABS
+                # self.vmin_resmap = 0
+                # self.vmax_resmap = 1.0
+
 
 def calculate_largest_areas(resmaps, thresholds):
 
@@ -138,7 +201,7 @@ def main(args):
     _, index_array_ft, _, classes_ft = train_test_split(
         index_array,
         classes,
-        test_size=config.FINETUNE_SPLIT,
+        test_size=FINETUNE_SPLIT,
         random_state=42,
         stratify=classes,
     )
@@ -182,11 +245,7 @@ def main(args):
     }
 
     # initialize discrete min_area values
-    min_areas = np.arange(
-        start=config.START_MIN_AREA,
-        stop=config.STOP_MIN_AREA,
-        step=config.STEP_MIN_AREA,
-    )
+    min_areas = np.arange(start=START_MIN_AREA, stop=STOP_MIN_AREA, step=STEP_MIN_AREA,)
 
     # initialize thresholds
     thresholds = np.arange(
@@ -275,7 +334,7 @@ def main(args):
         "best_score": max_score,
         "method": method,
         "dtype": dtype,
-        "split": config.FINETUNE_SPLIT,
+        "split": FINETUNE_SPLIT,
     }
     logger.info("finetuning results: {}".format(finetuning_result))
 

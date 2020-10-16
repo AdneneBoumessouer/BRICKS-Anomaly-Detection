@@ -3,22 +3,23 @@ import train
 
 train_commands = [
     # anoCAE
-    "-d LEGO_light/SV -a anoCAE -b 8 -l mssim -c rgb -e 60 -r custom",
+    "-d LEGO_light/SV -a anoCAE -b 8 -l mssim -c rgb -e 60 -r custom --inspect",
+    "-d LEGO_light/SV -a anoCAE -b 8 -l mssim -c rgb -e 60 -r ktrain --inspect",
     # baselineCAE
-    "-d LEGO_light/SV -a baselineCAE -b 8 -l mssim -c rgb -e 80 -r custom",
-    "-d LEGO_light/SV -a baselineCAE -b 8 -l mssim -c rgb -e 60 -r custom",
-    "-d LEGO_light/SV -a baselineCAE -b 8 -l mssim -c rgb -e 40 -r custom",
+    "-d LEGO_light/SV -a baselineCAE -b 8 -l mssim -c rgb -e 60 -r custom --inspect",
+    "-d LEGO_light/SV -a baselineCAE -b 8 -l mssim -c rgb -e 60 -r ktrain --inspect",
     # inceptionCAE
-    "-d LEGO_light/SV -a inceptionCAE -b 8 -l mssim -c rgb -e 80 -r custom",
-    "-d LEGO_light/SV -a inceptionCAE -b 8 -l mssim -c rgb -e 60 -r custom",
-    "-d LEGO_light/SV -a inceptionCAE -b 8 -l mssim -c rgb -e 40 -r custom",
+    "-d LEGO_light/SV -a inceptionCAE -b 8 -l mssim -c rgb -e 60 -r custom --inspect",
+    "-d LEGO_light/SV -a inceptionCAE -b 8 -l mssim -c rgb -e 60 -r ktrain --inspect",
     # mvtecCAE
-    "-d LEGO_light/SV -a mvtecCAE -b 8 -l mssim -c rgb -e 100 -r custom",
+    "-d LEGO_light/SV -a mvtecCAE -b 8 -l mssim -c rgb -e 60 -r custom --inspect",
+    "-d LEGO_light/SV -a mvtecCAE -b 8 -l mssim -c rgb -e 60 -r ktrain --inspect",
     # resnetCAE
-    "-d LEGO_light/SV -a resnetCAE -b 8 -l mssim -c rgb -e 80 -r custom",
-    "-d LEGO_light/SV -a resnetCAE -b 8 -l mssim -c rgb -e 60 -r custom",
+    "-d LEGO_light/SV -a resnetCAE -b 8 -l mssim -c rgb -e 60 -r custom --inspect",
+    "-d LEGO_light/SV -a resnetCAE -b 8 -l mssim -c rgb -e 60 -r ktrain --inspect",
     # skipCAE
-    # "-d LEGO_light/SV -a skipCAE -b 8 -l mssim -c rgb -e 60 -r custom",
+    "-d LEGO_light/SV -a skipCAE -b 8 -l mssim -c rgb -e 60 -r custom --inspect",
+    "-d LEGO_light/SV -a skipCAE -b 8 -l mssim -c rgb -e 60 -r ktrain --inspect",
 ]
 
 
@@ -29,5 +30,5 @@ for command in train_commands:
     try:
         train.main(args)
     except Exception:
-        continue
+        pass
 

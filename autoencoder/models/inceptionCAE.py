@@ -5,17 +5,13 @@ Model inspired by: https://github.com/natasasdj/anomalyDetection
 import tensorflow as tf
 from tensorflow.keras.layers import (
     Input,
-    Dense,
     Conv2D,
     MaxPooling2D,
     UpSampling2D,
     BatchNormalization,
-    GlobalAveragePooling2D,
     LeakyReLU,
     Activation,
     concatenate,
-    Flatten,
-    Reshape,
 )
 from tensorflow.keras.models import Model
 from tensorflow.keras import regularizers
@@ -23,8 +19,8 @@ from tensorflow.keras import regularizers
 
 # Preprocessing parameters
 RESCALE = 1.0 / 255
-# SHAPE = (256, 256)
-SHAPE = (512, 512)
+SHAPE = (256, 256)
+# SHAPE = (512, 512)
 PREPROCESSING_FUNCTION = None
 PREPROCESSING = None
 VMIN = 0.0

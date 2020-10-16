@@ -1,4 +1,6 @@
 import os
+import numpy as np
+import random
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import config
 
@@ -17,35 +19,32 @@ class Preprocessor:
         self.preprocessing_function = preprocessing_function
         # self.validation_split = config.VAL_SPLIT
 
-        self.nb_val_images = None
-        self.nb_test_images = None
-
     def get_train_generator(self, batch_size, shuffle=True):
         # This will do preprocessing and realtime data augmentation:
         train_datagen = ImageDataGenerator(
-            # standarize input
             featurewise_center=False,
+            samplewise_center=False,
             featurewise_std_normalization=False,
-            # randomly rotate images in the range (degrees, 0 to 180)
+            samplewise_std_normalization=False,
+            zca_whitening=False,
+            zca_epsilon=1e-6,
             rotation_range=config.ROT_ANGLE,
-            # randomly shift images horizontally (fraction of total width)
             width_shift_range=config.W_SHIFT_RANGE,
-            # randomly shift images vertically (fraction of total height)
             height_shift_range=config.H_SHIFT_RANGE,
-            # set mode for filling points outside the input boundaries
-            fill_mode=config.FILL_MODE,
-            # value used for fill_mode = "constant"
-            cval=0.0,
-            # randomly change brightness (darker < 1 < brighter)
             brightness_range=config.BRIGHTNESS_RANGE,
-            # set rescaling factor (applied before any other transformation)
+            shear_range=0.0,
+            zoom_range=config.ZOOM_RANGE,
+            channel_shift_range=config.CHANNEL_SHIFT_RANGE,
+            fill_mode="nearest",
+            cval=0.0,
+            horizontal_flip=False,
+            vertical_flip=False,
             rescale=self.rescale,
-            # set function that will be applied on each input
-            preprocessing_function=self.preprocessing_function,
-            # image data format, either "channels_first" or "channels_last"
+            preprocessing_function=None,
             data_format="channels_last",
-            # fraction of images reserved for validation (strictly between 0 and 1)
-            # validation_split=self.validation_split,
+            validation_split=0.0,
+            # interpolation_order=1,
+            dtype="float32",
         )
 
         # Generate training batches with datagen.flow_from_directory()
@@ -55,7 +54,6 @@ class Preprocessor:
             color_mode=self.color_mode,
             batch_size=batch_size,
             class_mode="input",
-            # subset="training",
             shuffle=shuffle,
         )
         return train_generator
@@ -70,7 +68,6 @@ class Preprocessor:
         validation_datagen = ImageDataGenerator(
             rescale=self.rescale,
             data_format="channels_last",
-            # validation_split=self.validation_split,
             preprocessing_function=self.preprocessing_function,
         )
         # Generate validation batches with datagen.flow_from_directory()
@@ -80,7 +77,6 @@ class Preprocessor:
             color_mode=self.color_mode,
             batch_size=batch_size,
             class_mode="input",
-            # subset="validation",
             shuffle=shuffle,
         )
         return validation_generator
@@ -145,6 +141,23 @@ class Preprocessor:
 
 
 def get_preprocessing_function(architecture):
-    if architecture in ["mvtecCAE", "baselineCAE", "indexptionCAE", "resnetCAE"]:
+    if architecture in [
+        "anoCAE",
+        "baselineCAE",
+        "inceptionCAE",
+        "mvtecCAE",
+        "resnetCAE",
+        "skipCAE",
+    ]:
         preprocessing_function = None
     return preprocessing_function
+
+
+def add_noise(img):
+    """Add random noise to an image"""
+    VARIABILITY = 0.05
+    deviation = VARIABILITY * random.random()
+    noise = np.random.normal(0, deviation, img.shape)
+    img += noise
+    img = np.clip(img, 0.0, 1.0)
+    return img
