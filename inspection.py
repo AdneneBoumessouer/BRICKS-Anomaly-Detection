@@ -44,11 +44,6 @@ def inspect_images(model_path):
     # -------------- INSPECTING VALIDATION IMAGES --------------
     logger.info("generating inspection plots of validation images...")
 
-    # create a directory to save inspection plots
-    inspection_val_dir = os.path.join(save_dir, "inspection_val")
-    if not os.path.isdir(inspection_val_dir):
-        os.makedirs(inspection_val_dir)
-
     inspection_val_generator = preprocessor.get_val_generator(
         batch_size=nb_validation_images, shuffle=False
     )
@@ -76,11 +71,6 @@ def inspect_images(model_path):
 
     # -------------- INSPECTING TEST IMAGES --------------
     logger.info("generating inspection plots of test images...")
-
-    # create a directory to save inspection plots
-    inspection_test_dir = os.path.join(save_dir, "inspection_test")
-    if not os.path.isdir(inspection_test_dir):
-        os.makedirs(inspection_test_dir)
 
     nb_test_images = preprocessor.get_total_number_test_images()
 

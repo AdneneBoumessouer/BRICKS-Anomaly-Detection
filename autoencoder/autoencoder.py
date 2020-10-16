@@ -56,6 +56,7 @@ class AutoEncoder:
 
         # training attributes
         self.learner = None
+        self.lr_estimate = None
 
         # results attributes
         self.hist = None
@@ -184,6 +185,9 @@ class AutoEncoder:
     ### Methods for training =================================================
 
     def find_lr_opt(self, train_generator, validation_generator, lr_estimate="custom"):
+        # record lr_estimate method
+        self.lr_estimate = lr_estimate
+
         # initialize learner object
         self.learner = ktrain.get_learner(
             model=self.model,
@@ -221,7 +225,7 @@ class AutoEncoder:
         lrs = np.array(self.learner.lr_finder.lrs)
         # minimum loss devided by 10
         self.ml_i = self.learner.lr_finder.ml
-        self.lr_ml_10 = lrs[self.ml_i] / 10
+        self.lr_ml_10 = float(lrs[self.ml_i] / 10)
         logger.info(f"lr with minimum loss divided by 10: {self.lr_ml_10:.2E}")
         try:
             min_loss_i = np.argmin(losses)
@@ -231,7 +235,7 @@ class AutoEncoder:
         # minimum gradient
         self.lr_mg_i = self.learner.lr_finder.mg
         if self.lr_mg_i is not None:
-            self.lr_mg = lrs[self.lr_mg_i]
+            self.lr_mg = float(lrs[self.lr_mg_i])
             logger.info(f"lr with minimum numerical gradient: {self.lr_mg:.2E}")
         return
 
@@ -290,7 +294,7 @@ class AutoEncoder:
             self.hist = self.learner.fit_onecycle(lr=lr_opt, epochs=epochs)
         return
 
-    ### Methods to create directory structure and save (and load?) model =================
+    ### Methods for saving (and loading?) model =================
 
     def create_save_dir(self):
         # create a directory to save model
@@ -368,7 +372,13 @@ class AutoEncoder:
                 "dynamic_range": self.dynamic_range,
                 "preprocessing": self.preprocessing,
             },
-            "lr_finder": {"lr_base": self.lr_base, "lr_opt": self.lr_opt,},
+            "lr_finder": {
+                "lr_estimate": self.lr_estimate,
+                "lr_base": self.lr_base,
+                "lr_opt": self.lr_opt,
+                "lr_mg": self.lr_mg,
+                "lr_ml_10": self.lr_ml_10,
+            },
             "training": {
                 "batch_size": self.batch_size,
                 "epochs_trained": self.get_best_epoch(),
@@ -385,7 +395,7 @@ class AutoEncoder:
         """
         hist_dict = self.get_history_dict()
         best_epoch = int(np.argmin(np.array(hist_dict["val_loss"])))
-        return best_epoch
+        return best_epoch + 1
 
     def get_best_val_loss(self):
         """

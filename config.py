@@ -1,14 +1,16 @@
 # Data augmentation parameters (only for training)
-ROT_ANGLE = 8  # 5
-W_SHIFT_RANGE = 0.1  # 0.05
-H_SHIFT_RANGE = 0.1  # 0.05
-FILL_MODE = "nearest"
-BRIGHTNESS_RANGE = [0.95, 1.05]
+ROT_ANGLE = 5  # 5, 8
+W_SHIFT_RANGE = 0.05  # 0.05, 0.1
+H_SHIFT_RANGE = 0.05  # 0.05, 0.1
+BRIGHTNESS_RANGE = [0.95, 1.05]  # [0.95, 1.05]
+ZOOM_RANGE = [0.9, 1.05]  # [0.9, 1.05]
+CHANNEL_SHIFT_RANGE = 0.05  # 0.1, 0.05
+
 # VAL_SPLIT = 0.1
 
 # Learning Rate Finder parameters
-START_LR = 1e-5
-LR_MAX_EPOCHS = 10
+START_LR = 1e-6  # 1e-6
+LR_MAX_EPOCHS = 20  # 10
 LRF_DECREASE_FACTOR = 0.85
 
 # Finetuning parameters
@@ -18,7 +20,8 @@ START_MIN_AREA = 5
 STOP_MIN_AREA = 1005
 
 # path to save model
-saved_models_path = "saved_models"
+# saved_models_path = "saved_models"
+saved_models_path = "saved_models/run_1"
 
 # Inspection val and test image filenames for SV dataset
 SV_FILENAMES_VAL_INSPECTION = [
@@ -57,12 +60,12 @@ SV_FILENAMES_TEST_INSPECTION = [
     "B_shifted_sv/100.png",
     "B_shifted_sv/200.png",
     "B_shifted_sv/230.png",
-    "C_color_1_sv/020.png",
-    "C_color_1_sv/050.png",
-    "C_color_1_sv/110.png",
-    "C_color_2_sv/010.png",
-    "C_color_2_sv/030.png",
-    "C_color_2_sv/080.png",
+    # "C_color_1_sv/020.png",
+    # "C_color_1_sv/050.png",
+    # "C_color_1_sv/110.png",
+    # "C_color_2_sv/010.png",
+    # "C_color_2_sv/030.png",
+    # "C_color_2_sv/080.png",
     "C_color_3_sv/001.png",
     "C_color_3_sv/010.png",
     "C_color_3_sv/180.png",
@@ -106,12 +109,12 @@ TV_FILENAMES_TEST_INSPECTION = [
     "B_shifted_tv/100.png",
     "B_shifted_tv/200.png",
     "B_shifted_tv/230.png",
-    "C_color_1_tv/020.png",
-    "C_color_1_tv/050.png",
-    "C_color_1_tv/110.png",
-    "C_color_2_tv/010.png",
-    "C_color_2_tv/030.png",
-    "C_color_2_tv/080.png",
+    # "C_color_1_tv/020.png",
+    # "C_color_1_tv/050.png",
+    # "C_color_1_tv/110.png",
+    # "C_color_2_tv/010.png",
+    # "C_color_2_tv/030.png",
+    # "C_color_2_tv/080.png",
     "C_color_3_tv/001.png",
     "C_color_3_tv/010.png",
     "C_color_3_tv/180.png",
