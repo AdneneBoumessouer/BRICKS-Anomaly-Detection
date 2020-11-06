@@ -21,7 +21,7 @@ STOP_MIN_AREA = 1005
 
 # path to save model
 # saved_models_path = "saved_models"
-saved_models_path = "saved_models/run_1"
+saved_models_path = "saved_models/test_ssim"
 
 # Inspection val and test image filenames for SV dataset
 SV_FILENAMES_VAL_INSPECTION = [
