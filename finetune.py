@@ -10,7 +10,6 @@ import tensorflow as tf
 from processing import utils
 from processing import postprocessing
 from processing.preprocessing import Preprocessor
-from processing.preprocessing import get_preprocessing_function
 from processing.postprocessing import label_images
 from processing.utils import printProgressBar
 from sklearn.model_selection import train_test_split
@@ -138,9 +137,6 @@ def main(args):
     vmax = info["preprocessing"]["vmax"]
     nb_validation_images = info["data"]["nb_validation_images"]
 
-    # get the correct preprocessing function
-    preprocessing_function = get_preprocessing_function(architecture)
-
     # ========= LOAD AND PREPROCESS VALIDATION & FINETUNING IMAGES =============
 
     # initialize preprocessor
@@ -149,7 +145,6 @@ def main(args):
         rescale=rescale,
         shape=shape,
         color_mode=color_mode,
-        preprocessing_function=preprocessing_function,
     )
 
     # -------------------------------------------------------------------

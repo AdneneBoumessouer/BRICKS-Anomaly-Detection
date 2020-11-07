@@ -8,7 +8,6 @@ import tensorflow as tf
 from processing import utils
 from processing import postprocessing
 from processing.preprocessing import Preprocessor
-from processing.preprocessing import get_preprocessing_function
 from processing.postprocessing import label_images
 from processing.utils import printProgressBar
 from skimage.util import img_as_ubyte
@@ -116,16 +115,12 @@ def main(args):
 
         # ====================== PREPROCESS TEST IMAGES ==========================
 
-        # get the correct preprocessing function
-        preprocessing_function = get_preprocessing_function(architecture)
-
         # initialize preprocessor
         preprocessor = Preprocessor(
             input_directory=input_directory,
             rescale=rescale,
             shape=shape,
             color_mode=color_mode,
-            preprocessing_function=preprocessing_function,
         )
 
         # get test generator

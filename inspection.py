@@ -25,14 +25,10 @@ def inspect_images(model_path):
     vmin = info["preprocessing"]["vmin"]
     vmax = info["preprocessing"]["vmax"]
     nb_validation_images = info["data"]["nb_validation_images"]
-    preprocessing_function = info["preprocessing"]["preprocessing"]
+    # preprocessing_function = info["preprocessing"]["preprocessing"]
 
     preprocessor = Preprocessor(
-        input_directory=input_dir,
-        rescale=rescale,
-        shape=shape,
-        color_mode=color_mode,
-        preprocessing_function=preprocessing_function,
+        input_directory=input_dir, rescale=rescale, shape=shape, color_mode=color_mode,
     )
 
     # get inspection images' filenames

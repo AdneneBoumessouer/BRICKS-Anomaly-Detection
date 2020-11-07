@@ -19,8 +19,6 @@ from tensorflow.keras.models import Model
 RESCALE = 1.0 / 255
 SHAPE = (227, 227)
 # SHAPE = (483, 483)
-PREPROCESSING_FUNCTION = None
-PREPROCESSING = None
 VMIN = 0.0
 VMAX = 1.0
 DYNAMIC_RANGE = VMAX - VMIN

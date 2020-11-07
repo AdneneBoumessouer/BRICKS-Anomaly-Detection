@@ -67,13 +67,7 @@ def load_model_HDF5(model_path):
     return model, info, history
 
 
-def save_np(arr, save_dir, filename):
-    np.save(
-        file=os.path.join(save_dir, filename), arr=arr, allow_pickle=True,
-    )
-
-
-def get_list_imgs_dir(dirName):
+def list_imgs(dirName):
     listOfFiles = list()
     for (dirpath, dirnames, filenames) in os.walk(dirName):
         listOfFiles += [

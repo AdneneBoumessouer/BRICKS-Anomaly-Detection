@@ -13,8 +13,6 @@ from autoencoder.models.resnet.resnet import ResnetBuilder
 RESCALE = 1 / 255
 SHAPE = (256, 256)
 # SHAPE = (512, 512)
-PREPROCESSING_FUNCTION = None
-PREPROCESSING = None
 VMIN = 0.0  # -1.0
 VMAX = 1.0
 DYNAMIC_RANGE = VMAX - VMIN

@@ -1,14 +1,15 @@
 import os
 import numpy as np
 import random
+from skimage.filters import gaussian
+from skimage.util import random_noise
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from processing.utils import list_imgs
 import config
 
 
 class Preprocessor:
-    def __init__(
-        self, input_directory, rescale, shape, color_mode, preprocessing_function,
-    ):
+    def __init__(self, input_directory, rescale, shape, color_mode):
         self.input_directory = input_directory
         self.train_data_dir = os.path.join(input_directory, "train")
         self.val_data_dir = os.path.join(input_directory, "val")
@@ -16,12 +17,9 @@ class Preprocessor:
         self.rescale = rescale
         self.shape = shape
         self.color_mode = color_mode
-        self.preprocessing_function = preprocessing_function
-        # self.validation_split = config.VAL_SPLIT
 
-    def get_train_generator(self, batch_size, shuffle=True):
-        # This will do preprocessing and realtime data augmentation:
-        train_datagen = ImageDataGenerator(
+    def get_train_datagen(self):
+        datagen = ImageDataGenerator(
             featurewise_center=False,
             samplewise_center=False,
             featurewise_std_normalization=False,
@@ -40,12 +38,17 @@ class Preprocessor:
             horizontal_flip=False,
             vertical_flip=False,
             rescale=self.rescale,
+            # preprocessing_function=preprocessing_function,
             preprocessing_function=None,
             data_format="channels_last",
             validation_split=0.0,
-            # interpolation_order=1,
             dtype="float32",
         )
+        return datagen
+
+    def get_train_generator(self, batch_size, shuffle=True):
+        # This will do preprocessing and realtime data augmentation:
+        train_datagen = self.get_train_datagen()
 
         # Generate training batches with datagen.flow_from_directory()
         train_generator = train_datagen.flow_from_directory(
@@ -58,41 +61,55 @@ class Preprocessor:
         )
         return train_generator
 
-    def get_val_generator(self, batch_size, shuffle=True):
-        """
-        For training, pass autoencoder.batch_size as batch size.
-        For validation, pass nb_validation_images as batch size.
-        For test, pass nb_test_images as batch size.
-        """
+    def get_val_datagen(self):
         # For validation dataset, only rescaling
-        validation_datagen = ImageDataGenerator(
+        datagen = ImageDataGenerator(
             rescale=self.rescale,
             data_format="channels_last",
-            preprocessing_function=self.preprocessing_function,
+            preprocessing_function=None,
         )
+        return datagen
+
+    def get_val_generator(self, batch_size, shuffle=True, purpose="val"):
+        """
+        For training, pass autoencoder.batch_size as batch size.
+        For validation, pass nb_validation_images as batch size with shuffle False.
+        """
+        # @todo: remove batch_size parameter
+        if purpose == "val":
+            validation_datagen = self.get_val_datagen()
+        elif purpose == "monitor_train":
+            validation_datagen = self.get_train_datagen()
+
+        # get number of validation images
+        nb_val_images = len(list_imgs(self.val_data_dir))
+
         # Generate validation batches with datagen.flow_from_directory()
         validation_generator = validation_datagen.flow_from_directory(
             directory=self.val_data_dir,
             target_size=self.shape,
             color_mode=self.color_mode,
-            batch_size=batch_size,
+            batch_size=nb_val_images,
             class_mode="input",
             shuffle=shuffle,
         )
         return validation_generator
 
-    def get_test_generator(self, batch_size, shuffle=False):
-        """
-        For training, pass autoencoder.batch_size as batch size.
-        For validation, pass nb_validation_images as batch size.
-        For test, pass nb_test_images as batch size.
-        """
+    def get_test_datagen(self):
         # For test dataset, only rescaling
-        test_datagen = ImageDataGenerator(
+        datagen = ImageDataGenerator(
             rescale=self.rescale,
             data_format="channels_last",
-            preprocessing_function=self.preprocessing_function,
+            preprocessing_function=None,
         )
+        return datagen
+
+    def get_test_generator(self, batch_size, shuffle=False):
+        """
+        For test, pass nb_test_images as batch size with shuffle False.
+        """
+        # For test dataset, only rescaling
+        test_datagen = self.get_test_datagen()
 
         # Generate validation batches with datagen.flow_from_directory()
         test_generator = test_datagen.flow_from_directory(
@@ -115,7 +132,7 @@ class Preprocessor:
         test_datagen = ImageDataGenerator(
             rescale=self.rescale,
             data_format="channels_last",
-            preprocessing_function=self.preprocessing_function,
+            preprocessing_function=None,
         )
 
         # Generate validation batches with datagen.flow_from_directory()
@@ -140,24 +157,11 @@ class Preprocessor:
         return total_number
 
 
-def get_preprocessing_function(architecture):
-    if architecture in [
-        "anoCAE",
-        "baselineCAE",
-        "inceptionCAE",
-        "mvtecCAE",
-        "resnetCAE",
-        "skipCAE",
-    ]:
-        preprocessing_function = None
-    return preprocessing_function
-
-
-def add_noise(img):
+def preprocessing_function(img):
     """Add random noise to an image"""
-    VARIABILITY = 0.05
-    deviation = VARIABILITY * random.random()
-    noise = np.random.normal(0, deviation, img.shape)
-    img += noise
-    img = np.clip(img, 0.0, 1.0)
-    return img
+    # blur image a little
+    blurred = gaussian(img, sigma=0.4, multichannel=True)
+    # add noise
+    noisy = random_noise(blurred, mode="gaussian", clip=True, mean=0, var=1e-4)
+    return noisy
+
