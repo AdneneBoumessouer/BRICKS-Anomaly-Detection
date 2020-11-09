@@ -1,5 +1,5 @@
 # Data augmentation parameters (only for training)
-ROT_ANGLE = 30  # 5, 8
+ROT_ANGLE = 60  # 30, 5, 8
 W_SHIFT_RANGE = 0.05  # 0.05, 0.1
 H_SHIFT_RANGE = 0.05  # 0.05, 0.1
 BRIGHTNESS_RANGE = [0.95, 1.05]  # [0.95, 1.05]
@@ -21,7 +21,7 @@ STOP_MIN_AREA = 1005
 
 # path to save model
 # saved_models_path = "saved_models"
-saved_models_path = "saved_models/dummy_test"
+saved_models_path = "saved_models"
 
 # Inspection val and test image filenames for SV dataset
 SV_FILENAMES_VAL_INSPECTION = [
