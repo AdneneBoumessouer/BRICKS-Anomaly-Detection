@@ -6,8 +6,6 @@ BRIGHTNESS_RANGE = [0.95, 1.05]  # [0.95, 1.05]
 ZOOM_RANGE = [0.9, 1.05]  # [0.9, 1.05]
 CHANNEL_SHIFT_RANGE = 0.05  # 0.1, 0.05
 
-# VAL_SPLIT = 0.1
-
 # Learning Rate Finder parameters
 START_LR = 1e-6  # 1e-6
 LR_MAX_EPOCHS = 10  # 10
@@ -20,102 +18,65 @@ START_MIN_AREA = 5
 STOP_MIN_AREA = 1005
 
 # path to save model
-# saved_models_path = "saved_models"
-saved_models_path = "saved_models"
+saved_models_path = "saved_models/cb_test_run"
 
 # Inspection val and test image filenames for SV dataset
-SV_FILENAMES_VAL_INSPECTION = [
-    "good/004.png",
-    "good/104.png",
-    "good/154.png",
-    "good/204.png",
-    "good/304.png",
+FILENAMES_VAL_INSPECTION = [
+    "good/a00_003.png",
+    "good/a00_103.png",
+    "good/a00_153.png",
+    "good/a00_203.png",
+    "good/a00_303.png",
+    "good/a45_003.png",
+    "good/a45_103.png",
+    "good/a45_153.png",
+    "good/a45_203.png",
+    "good/a45_303.png",
 ]
 
-SV_FILENAMES_TEST_INSPECTION = [
-    "good/010.png",
-    "good/055.png",
-    "good/080.png",
-    "good/120.png",
-    "good/240.png",
-    "B_added_sv/020.png",
-    "B_added_sv/040.png",
-    "B_added_sv/080.png",
-    "B_added_sv/090.png",
-    "B_added_sv/120.png",
-    "B_added_sv/230.png",
-    "B_missing_sv/010.png",
-    "B_missing_sv/020.png",
-    "B_missing_sv/030.png",
-    "B_missing_sv/040.png",
-    "B_missing_sv/080.png",
-    "B_missing_sv/100.png",
-    "B_missing_sv/110.png",
-    "B_missing_sv/260.png",
-    "B_missing_sv/270.png",
-    "B_missing_sv/320.png",
-    "B_shifted_sv/010.png",
-    "B_shifted_sv/030.png",
-    "B_shifted_sv/040.png",
-    "B_shifted_sv/100.png",
-    "B_shifted_sv/200.png",
-    "B_shifted_sv/230.png",
-    # "C_color_1_sv/020.png",
-    # "C_color_1_sv/050.png",
-    # "C_color_1_sv/110.png",
-    # "C_color_2_sv/010.png",
-    # "C_color_2_sv/030.png",
-    # "C_color_2_sv/080.png",
-    "C_color_3_sv/001.png",
-    "C_color_3_sv/010.png",
-    "C_color_3_sv/180.png",
-]
-
-# Inspection val and test image filenames for TV dataset
-
-TV_FILENAMES_VAL_INSPECTION = [
-    "good/004.png",
-    "good/104.png",
-    "good/154.png",
-    "good/204.png",
-    "good/304.png",
-]
-
-TV_FILENAMES_TEST_INSPECTION = [
-    "good/010.png",
-    "good/055.png",
-    "good/080.png",
-    "good/120.png",
-    "good/240.png",
-    "B_added_tv/020.png",
-    "B_added_tv/040.png",
-    "B_added_tv/080.png",
-    "B_added_tv/090.png",
-    "B_added_tv/120.png",
-    "B_added_tv/230.png",
-    "B_missing_tv/010.png",
-    "B_missing_tv/020.png",
-    "B_missing_tv/030.png",
-    "B_missing_tv/040.png",
-    "B_missing_tv/080.png",
-    "B_missing_tv/100.png",
-    "B_missing_tv/110.png",
-    "B_missing_tv/260.png",
-    "B_missing_tv/270.png",
-    "B_missing_tv/320.png",
-    "B_shifted_tv/010.png",
-    "B_shifted_tv/030.png",
-    "B_shifted_tv/040.png",
-    "B_shifted_tv/100.png",
-    "B_shifted_tv/200.png",
-    "B_shifted_tv/230.png",
-    # "C_color_1_tv/020.png",
-    # "C_color_1_tv/050.png",
-    # "C_color_1_tv/110.png",
-    # "C_color_2_tv/010.png",
-    # "C_color_2_tv/030.png",
-    # "C_color_2_tv/080.png",
-    "C_color_3_tv/001.png",
-    "C_color_3_tv/010.png",
-    "C_color_3_tv/180.png",
+FILENAMES_TEST_INSPECTION = [
+    "good/a00_008.png",
+    "good/a00_188.png",
+    "good/a45_008.png",
+    "good/a45_188.png",
+    "02_added/a00_009.png",  # low contrast: between added legobrick and reconstrcuted legobricks
+    "02_added/a00_028.png",  # high contrast: between added legobrick and reconstrcuted white background
+    "02_added/a00_085.png",  # high contrast: between added legobrick and reconstrcuted white background
+    "02_added/a00_129.png",  # high contrast: between added legobrick and reconstrcuted white background
+    "02_added/a45_001.png",  # low contrast: between added legobrick and reconstrcuted legobricks
+    "02_added/a45_074.png",  # high contrast: between added legobrick and reconstrcuted white background
+    "02_added/a45_132.png",  # high contrast: between added legobrick and reconstrcuted white background
+    "03_missing/a00_025.png",  # low contrast: between added legobrick and reconstrcuted legobricks
+    "03_missing/a00_089.png",  # high contrast: white background behind missing legobrick
+    "03_missing/a00_103.png",  # high contrast: white background behind missing legobrick
+    "03_missing/a45_129.png",  # low contrast: between missing legobrick and reconstrcuted legobricks
+    "03_missing/a45_037.png",  # medium contrast: between gray background( due to missing legobrick) and reconstructed legobricks
+    "04_shifted/a00_090.png",  # low contrast: shifted legobrick not noticable from this angle
+    "04_shifted/a00_315.png",  # high contrast: right half of shifted legobrick and reconstructed white background
+    "04_shifted/a45_001.png",  # hight contrast: left half of shifted legobrick and reconstructed white background
+    "04_shifted/a45_090.png",  # high contrast: upper half of shifted legobrick and reconstructed white background
+    "05_color/a00_001.png",  # low constrast: swapped blue brick (lvl0) with yellow brick (lvl0) of lego pyramid
+    "05_color/a00_225.png",  # low constrast: swapped yellow brick (lvl1) with gray brick (lvl2) of lego pyramid
+    "05_color/a45_001.png",  # low constrast: swapped blue brick (lvl0) with yellow brick (lvl0) of lego pyramid
+    "05_color/a45_225.png",  # low constrast: swapped yellow brick (lvl1) with gray brick (lvl2) of lego pyramid
+    "06_crack/a00_012.png",  # medium contrast: crack and reconstructed yellow brick
+    "06_crack/a00_314.png",  # medium contrast: crack and reconstructed yellow brick
+    "06_crack/a45_001.png",  # medium contrast: crack and reconstructed yellow brick
+    "06_crack/a45_315.png",  # medium contrast: crack and reconstructed yellow brick
+    "07_fracture/a00_311.png",  # medium contrast: fracture and reconstructed blue brick
+    "07_fracture/a00_358.png",  # medium contrast: fracture and reconstructed blue brick
+    "07_fracture/a45_315.png",  # medium contrast: fracture and reconstructed blue brick
+    "07_fracture/a45_360.png",  # medium contrast: fracture and reconstructed blue brick
+    "08_scratch/a00_090.png",  # high contrast & difficult angle: scratch and reconstructed red brick (not very noticeble from angle)
+    "08_scratch/a00_133.png",  # high contrast: scratch and reconstructed red brick
+    "08_scratch/a45_197.png",  # high contrast & difficult angle: scratch and reconstructed red brick
+    "08_scratch/a45_136.png",  # high contrast: scratch and reconstructed red brick
+    "09_hole/a00_160.png",  # medium contrast & difficult angle: hole and reconstructed red brick (not very noticeble from angle)
+    "09_hole/a00_224.png",  # high contrast: hole and reconstructed red brick
+    "09_hole/a45_167.png",  # medium contrast & difficult angle: hole and reconstructed red brick (not very noticeble from angle)
+    "09_hole/a45_224.png",  # high contrast: hole and reconstructed red brick
+    "10_stain/a00_154.png",  # high contrast & difficult angle: white stain on gray legobrick
+    "10_stain/a00_224.png",  # high contrast: white stain on gray legobrick
+    "10_stain/a45_161.png",  # high contrast & difficult angle: white stain on gray legobrick
+    "10_stain/a45_225.png",  # high contrast: white stain on gray legobrick
 ]

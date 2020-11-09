@@ -211,16 +211,11 @@ if __name__ == "__main__":
     # run main function
     main(args)
 
-# Examples of commands to initiate training with mvtec architecture LEGO_light/SV
+# Examples of commands to initiate training with mvtec architecture LEGO_cb
 
-# python3 train.py -d LEGO_light/SV -a anoCAE -b 8 -l mssim -c rgb -e 60 -r custom --inspect
-# python3 train.py -d LEGO_light/SV -a mvtecCAE -b 8 -l mssim -c rgb -e 60 -r custom --inspect
-# python3 train.py -d LEGO_light/SV -a baselineCAE -b 8 -l mssim -c rgb -e 60 -r custom --inspect
-# python3 train.py -d LEGO_light/SV -a inceptionCAE -b 8 -l mssim -c rgb -e 60 -r custom --inspect
-# python3 train.py -d LEGO_light/SV -a resnetCAE -b 8 -l mssim -c rgb -e 60 -r custom --inspect
-# python3 train.py -d LEGO_light/SV -a skipCAE -b 8 -l mssim -c rgb -e 60 -r custom --inspect
-
-# python3 train.py -d LEGO_light/SV -a mvtecCAE -b 8 -l l2 -c rgb -e 100 -r custom
-# python3 train.py -d LEGO_light/SV -a mvtecCAE -b 8 -l l2 -c rgb -e 100 -r ktrain
-# python3 train.py -d LEGO_light/SV -a mvtecCAE -b 8 -l l2 -c rgb -e 100 -r ktrain -p 1cycle
+# python3 train.py -d LEGO_cb -a anoCAE -b 8 -l mssim -c rgb -r custom --inspect
+# python3 train.py -d LEGO_cb -a baselineCAE -b 8 -l mssim -c rgb -r custom --inspect
+# python3 train.py -d LEGO_cb -a inceptionCAE -b 8 -l mssim -c rgb -r custom --inspect
+# python3 train.py -d LEGO_cb -a mvtecCAE -b 8 -l mssim -c rgb -r custom --inspect
+# python3 train.py -d LEGO_cb -a resnetCAE -b 8 -l mssim -c rgb -r custom --inspect
 

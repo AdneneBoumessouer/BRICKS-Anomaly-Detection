@@ -3,6 +3,7 @@ import argparse
 from processing.preprocessing import Preprocessor
 from processing import utils
 from processing import postprocessing
+import config
 
 import logging
 
@@ -32,10 +33,8 @@ def inspect_images(model_path):
     )
 
     # get inspection images' filenames
-    (
-        filenames_val_insp,
-        filenames_test_insp,
-    ) = utils.get_inspection_filenames_from_config(input_dir)
+    filenames_val_insp = config.FILENAMES_VAL_INSPECTION
+    filenames_test_insp = config.FILENAMES_TEST_INSPECTION
 
     # -------------- INSPECTING VALIDATION IMAGES --------------
     logger.info("generating inspection plots of validation images...")
