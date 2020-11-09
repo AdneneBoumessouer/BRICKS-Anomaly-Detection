@@ -69,11 +69,11 @@ class ResmapPlotter:
 
     # Method for generating and plotting Resmaps for inspection
 
-    def generate_inspection_figure(self, filenames_plot=[], model_path=None):
-        if filenames_plot != []:
-            indicies = [self.filenames.index(filename) for filename in filenames_plot]
-        else:
-            indicies = list(range(len(self.imgs_input)))
+    def generate_inspection_figure(self):
+        # if filenames_plot != []:
+        #     indicies = [self.filenames.index(filename) for filename in filenames_plot]
+        # else:
+        indicies = list(range(len(self.imgs_input)))
 
         nrows = len(indicies)
         ncols = 5
@@ -81,8 +81,6 @@ class ResmapPlotter:
         printProgressBar(0, nrows, prefix="Progress:", suffix="Complete", length=80)
 
         fig, axarr = plt.subplots(nrows=nrows, ncols=ncols, figsize=(25, 5 * nrows))
-        # if model_path:
-        #     fig.suptitle(model_path + "\n", fontsize=20)
         for i, j in enumerate(indicies):
             axarr[i, 0].imshow(
                 self.imgs_input[j], vmin=self.vmin, vmax=self.vmax, cmap=None
@@ -143,41 +141,41 @@ class ResmapPlotter:
 
     # Method for plotting Resmaps' scores for inspection
 
-    def generate_score_scatter_plot(
-        self, generator_test, model_path=None, filenames_plot=[]
-    ):
-        if filenames_plot != []:
-            indicies_to_plot = [
-                self.filenames.index(filename) for filename in filenames_plot
-            ]
-        else:
-            indicies_to_plot = list(range(len(self.imgs_input)))
+    # def generate_score_scatter_plot(
+    #     self, generator_test, model_path=None, filenames_plot=[]
+    # ):
+    #     if filenames_plot != []:
+    #         indicies_to_plot = [
+    #             self.filenames.index(filename) for filename in filenames_plot
+    #         ]
+    #     else:
+    #         indicies_to_plot = list(range(len(self.imgs_input)))
 
-        R_list = [self.RC_ssim, self.RC_l1, self.RC_l2]
-        method_list = ["ssim", "l1", "l2"]
-        with plt.style.context("dark_background"):
-            fig, axarr = plt.subplots(nrows=3, ncols=1, figsize=(15, 24))
-            if model_path:
-                fig.suptitle(model_path, fontsize=16)
-            for i, (R, method) in enumerate(list(zip(R_list, method_list))):
-                for category in list(generator_test.class_indices.keys()):
-                    indicies_cat = np.nonzero(
-                        generator_test.classes == generator_test.class_indices[category]
-                    )[0]
-                    if filenames_plot != []:
-                        indicies_cat = list(
-                            set.intersection(set(indicies_cat), set(indicies_to_plot))
-                        )
-                    scores = R.scores[indicies_cat]
-                    marker = "s" if category == "good" else "."
-                    # markersize = 6 if category == "good" else 4
-                    axarr[i].scatter(
-                        indicies_cat, scores, alpha=0.5, marker=marker, label=category
-                    )
-                axarr[i].set_xlabel("image index")
-                axarr[i].set_ylabel(method.upper() + "_score")
-                axarr[i].legend()
-        return fig
+    #     R_list = [self.RC_ssim, self.RC_l1, self.RC_l2]
+    #     method_list = ["ssim", "l1", "l2"]
+    #     with plt.style.context("dark_background"):
+    #         fig, axarr = plt.subplots(nrows=3, ncols=1, figsize=(15, 24))
+    #         if model_path:
+    #             fig.suptitle(model_path, fontsize=16)
+    #         for i, (R, method) in enumerate(list(zip(R_list, method_list))):
+    #             for category in list(generator_test.class_indices.keys()):
+    #                 indicies_cat = np.nonzero(
+    #                     generator_test.classes == generator_test.class_indices[category]
+    #                 )[0]
+    #                 # if filenames_plot != []:
+    #                 #     indicies_cat = list(
+    #                 #         set.intersection(set(indicies_cat), set(indicies_to_plot))
+    #                 #     )
+    #                 scores = R.scores[indicies_cat]
+    #                 marker = "s" if category == "good" else "."
+    #                 # markersize = 6 if category == "good" else 4
+    #                 axarr[i].scatter(
+    #                     indicies_cat, scores, alpha=0.5, marker=marker, label=category
+    #                 )
+    #             axarr[i].set_xlabel("image index")
+    #             axarr[i].set_ylabel(method.upper() + "_score")
+    #             axarr[i].legend()
+    #     return fig
 
 
 ## functions for processing resmaps

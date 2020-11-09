@@ -124,11 +124,3 @@ def save_dataframe_as_text_file(df, save_dir, filename):
         f.write(df.to_string(header=True, index=True))
         print("[INFO] validation_results.txt saved at {}".format(save_dir))
 
-
-def get_inspection_filenames_from_config(input_dir):
-    dataset_name = input_dir.split("/")[-1]
-    if dataset_name == "SV":
-        return config.SV_FILENAMES_VAL_INSPECTION, config.SV_FILENAMES_TEST_INSPECTION
-    elif dataset_name == "TV":
-        return config.TV_FILENAMES_VAL_INSPECTION, config.TV_FILENAMES_TEST_INSPECTION
-
