@@ -55,13 +55,12 @@ def main(args):
         rescale=autoencoder.rescale,
         shape=autoencoder.shape,
         color_mode=autoencoder.color_mode,
-        preprocessing_function=autoencoder.preprocessing_function,
     )
     train_generator = preprocessor.get_train_generator(
         batch_size=autoencoder.batch_size, shuffle=True
     )
     validation_generator = preprocessor.get_val_generator(
-        batch_size=autoencoder.batch_size, shuffle=True
+        batch_size=autoencoder.batch_size, shuffle=False, purpose="val",
     )
 
     # find best learning rates for training
@@ -214,12 +213,12 @@ if __name__ == "__main__":
 
 # Examples of commands to initiate training with mvtec architecture LEGO_light/SV
 
-# python3 train.py -d LEGO_light/SV -a anoCAE -b 8 -l mssim -c rgb --inspect
-# python3 train.py -d LEGO_light/SV -a mvtecCAE -b 8 -l mssim -c rgb --inspect
-# python3 train.py -d LEGO_light/SV -a baselineCAE -b 8 -l mssim -c rgb --inspect
-# python3 train.py -d LEGO_light/SV -a inceptionCAE -b 8 -l mssim -c rgb --inspect
-# python3 train.py -d LEGO_light/SV -a resnetCAE -b 8 -l mssim -c rgb --inspect
-# python3 train.py -d LEGO_light/SV -a skipCAE -b 8 -l mssim -c rgb --inspect
+# python3 train.py -d LEGO_light/SV -a anoCAE -b 8 -l mssim -c rgb -e 60 -r custom --inspect
+# python3 train.py -d LEGO_light/SV -a mvtecCAE -b 8 -l mssim -c rgb -e 60 -r custom --inspect
+# python3 train.py -d LEGO_light/SV -a baselineCAE -b 8 -l mssim -c rgb -e 60 -r custom --inspect
+# python3 train.py -d LEGO_light/SV -a inceptionCAE -b 8 -l mssim -c rgb -e 60 -r custom --inspect
+# python3 train.py -d LEGO_light/SV -a resnetCAE -b 8 -l mssim -c rgb -e 60 -r custom --inspect
+# python3 train.py -d LEGO_light/SV -a skipCAE -b 8 -l mssim -c rgb -e 60 -r custom --inspect
 
 # python3 train.py -d LEGO_light/SV -a mvtecCAE -b 8 -l l2 -c rgb -e 100 -r custom
 # python3 train.py -d LEGO_light/SV -a mvtecCAE -b 8 -l l2 -c rgb -e 100 -r ktrain

@@ -68,8 +68,6 @@ class AutoEncoder:
             self.model = anoCAE.build_model(color_mode)
             self.rescale = anoCAE.RESCALE
             self.shape = anoCAE.SHAPE
-            self.preprocessing_function = anoCAE.PREPROCESSING_FUNCTION
-            self.preprocessing = anoCAE.PREPROCESSING
             self.vmin = anoCAE.VMIN
             self.vmax = anoCAE.VMAX
             self.dynamic_range = anoCAE.DYNAMIC_RANGE
@@ -82,8 +80,6 @@ class AutoEncoder:
             self.model = mvtecCAE.build_model(color_mode)
             self.rescale = mvtecCAE.RESCALE
             self.shape = mvtecCAE.SHAPE
-            self.preprocessing_function = mvtecCAE.PREPROCESSING_FUNCTION
-            self.preprocessing = mvtecCAE.PREPROCESSING
             self.vmin = mvtecCAE.VMIN
             self.vmax = mvtecCAE.VMAX
             self.dynamic_range = mvtecCAE.DYNAMIC_RANGE
@@ -96,8 +92,6 @@ class AutoEncoder:
             self.model = baselineCAE.build_model(color_mode)
             self.rescale = baselineCAE.RESCALE
             self.shape = baselineCAE.SHAPE
-            self.preprocessing_function = baselineCAE.PREPROCESSING_FUNCTION
-            self.preprocessing = baselineCAE.PREPROCESSING
             self.vmin = baselineCAE.VMIN
             self.vmax = baselineCAE.VMAX
             self.dynamic_range = baselineCAE.DYNAMIC_RANGE
@@ -110,8 +104,6 @@ class AutoEncoder:
             self.model = inceptionCAE.build_model(color_mode)
             self.rescale = inceptionCAE.RESCALE
             self.shape = inceptionCAE.SHAPE
-            self.preprocessing_function = inceptionCAE.PREPROCESSING_FUNCTION
-            self.preprocessing = inceptionCAE.PREPROCESSING
             self.vmin = inceptionCAE.VMIN
             self.vmax = inceptionCAE.VMAX
             self.dynamic_range = inceptionCAE.DYNAMIC_RANGE
@@ -124,8 +116,6 @@ class AutoEncoder:
             self.model = resnetCAE.build_model(color_mode)
             self.rescale = resnetCAE.RESCALE
             self.shape = resnetCAE.SHAPE
-            self.preprocessing_function = resnetCAE.PREPROCESSING_FUNCTION
-            self.preprocessing = resnetCAE.PREPROCESSING
             self.vmin = resnetCAE.VMIN
             self.vmax = resnetCAE.VMAX
             self.dynamic_range = resnetCAE.DYNAMIC_RANGE
@@ -138,8 +128,6 @@ class AutoEncoder:
             self.model = skipCAE.build_model(color_mode)
             self.rescale = skipCAE.RESCALE
             self.shape = skipCAE.SHAPE
-            self.preprocessing_function = skipCAE.PREPROCESSING_FUNCTION
-            self.preprocessing = skipCAE.PREPROCESSING
             self.vmin = skipCAE.VMIN
             self.vmax = skipCAE.VMAX
             self.dynamic_range = skipCAE.DYNAMIC_RANGE
@@ -370,7 +358,7 @@ class AutoEncoder:
                 "vmin": self.vmin,
                 "vmax": self.vmax,
                 "dynamic_range": self.dynamic_range,
-                "preprocessing": self.preprocessing,
+                # "preprocessing": self.preprocessing,
             },
             "lr_finder": {
                 "lr_estimate": self.lr_estimate,
