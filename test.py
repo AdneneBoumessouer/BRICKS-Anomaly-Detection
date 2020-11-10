@@ -8,7 +8,6 @@ import tensorflow as tf
 from processing import utils
 from processing import postprocessing
 from processing.preprocessing import Preprocessor
-from processing.preprocessing import get_preprocessing_function
 from processing.postprocessing import label_images
 from processing.utils import printProgressBar
 from skimage.util import img_as_ubyte
@@ -116,16 +115,12 @@ def main(args):
 
         # ====================== PREPROCESS TEST IMAGES ==========================
 
-        # get the correct preprocessing function
-        preprocessing_function = get_preprocessing_function(architecture)
-
         # initialize preprocessor
         preprocessor = Preprocessor(
             input_directory=input_directory,
             rescale=rescale,
             shape=shape,
             color_mode=color_mode,
-            preprocessing_function=preprocessing_function,
         )
 
         # get test generator
@@ -149,6 +144,7 @@ def main(args):
             imgs_pred=imgs_test_pred,
             vmin=vmin,
             vmax=vmax,
+            color="grayscale",
             method=method,
             dtype=dtype,
             filenames=filenames,
@@ -224,7 +220,7 @@ def main(args):
             save_segmented_images(tensor_test.resmaps, threshold, filenames, save_dir)
 
         # print test_results to console
-        print("test results: {}".format(test_result))
+        logger.info("test results: {}".format(test_result))
 
 
 if __name__ == "__main__":
@@ -242,4 +238,4 @@ if __name__ == "__main__":
     main(args)
 
 # Examples of command to initiate testing
-# python3 test.py -p saved_models/mvtec/capsule/mvtecCAE/ssim/13-06-2020_15-35-10/mvtecCAE_b8_e39.hdf5
+# python3 test.py -p saved_models/LEGO_light/SV/mvtecCAE/mssim/20-09-2020_14-21-51/mvtecCAE_b8_e148.hdf5

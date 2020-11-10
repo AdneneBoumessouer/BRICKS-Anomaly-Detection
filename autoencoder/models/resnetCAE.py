@@ -1,34 +1,25 @@
-from tensorflow import keras
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import (
     Add,
     ReLU,
     Conv2D,
     Conv2DTranspose,
-    MaxPooling2D,
     BatchNormalization,
     Activation,
 )
-from tensorflow.keras.regularizers import l2
 from autoencoder.models.resnet.resnet import ResnetBuilder
 
 # Preprocessing variables
 RESCALE = 1 / 255
 SHAPE = (256, 256)
-PREPROCESSING_FUNCTION = None
-PREPROCESSING = None
+# SHAPE = (512, 512)
 VMIN = 0.0  # -1.0
 VMAX = 1.0
 DYNAMIC_RANGE = VMAX - VMIN
 
-# Learning Rate Finder parameters
-START_LR = 1e-5  # 1e-5
-LR_MAX_EPOCHS = 10
-LRF_DECREASE_FACTOR = 0.85
-
 # Training parameters
-EARLY_STOPPING = 12
-REDUCE_ON_PLATEAU = 6
+EARLY_STOPPING = 6
+REDUCE_ON_PLATEAU = 3
 
 
 def build_model(color_mode):

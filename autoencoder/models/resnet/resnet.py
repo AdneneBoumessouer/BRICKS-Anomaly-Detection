@@ -5,8 +5,6 @@ Created on Sat Jul  4 18:45:19 2020
 
 @inspired by: https://github.com/raghakot/keras-resnet
 """
-# import tensorflow as tf
-# from tensorflow import keras
 import six
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import (

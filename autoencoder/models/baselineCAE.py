@@ -10,10 +10,8 @@ from tensorflow.keras.layers import (
     MaxPooling2D,
     UpSampling2D,
     BatchNormalization,
-    GlobalAveragePooling2D,
     LeakyReLU,
     Activation,
-    concatenate,
     Flatten,
     Reshape,
 )
@@ -24,20 +22,14 @@ from tensorflow.keras import regularizers
 # Preprocessing parameters
 RESCALE = 1.0 / 255
 SHAPE = (256, 256)
-PREPROCESSING_FUNCTION = None
-PREPROCESSING = None
+# SHAPE = (512, 512)
 VMIN = 0.0
 VMAX = 1.0
 DYNAMIC_RANGE = VMAX - VMIN
 
-# Learning Rate Finder parameters
-START_LR = 1e-5
-LR_MAX_EPOCHS = 10
-LRF_DECREASE_FACTOR = 0.88  # 0.88
-
 # Training parameters
-EARLY_STOPPING = 20  # 16
-REDUCE_ON_PLATEAU = 10  # 8
+EARLY_STOPPING = 12
+REDUCE_ON_PLATEAU = 6
 
 
 def build_model(color_mode):
@@ -91,13 +83,12 @@ def build_model(color_mode):
     x = MaxPooling2D((2, 2), padding="same")(x)
     # ---------------------------------------------------------------------------------
 
-    x = Flatten()(x)
-    x = Dense(encoding_dim, kernel_regularizer=regularizers.l2(1e-6))(x)
-    x = LeakyReLU(alpha=0.1)(x)
-    # encoded = x
+    # x = Flatten()(x)
+    # x = Dense(encoding_dim, kernel_regularizer=regularizers.l2(1e-6))(x)
+    # x = LeakyReLU(alpha=0.1)(x)
 
     # decoder
-    x = Reshape((4, 4, encoding_dim // 16))(x)
+    # x = Reshape((4, 4, encoding_dim // 16))(x)
     x = Conv2D(128, (3, 3), padding="same", kernel_regularizer=regularizers.l2(1e-6))(x)
     x = BatchNormalization()(x)
     x = LeakyReLU(alpha=0.1)(x)

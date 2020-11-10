@@ -10,12 +10,12 @@ import tensorflow as tf
 from processing import utils
 from processing import postprocessing
 from processing.preprocessing import Preprocessor
-from processing.preprocessing import get_preprocessing_function
 from processing.postprocessing import label_images
 from processing.utils import printProgressBar
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 from test import predict_classes
+import config
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -26,6 +26,63 @@ FINETUNE_SPLIT = 0.1
 STEP_MIN_AREA = 5
 START_MIN_AREA = 5
 STOP_MIN_AREA = 1005
+
+# Segmentation Parameters
+# float + SSIM
+THRESH_MIN_FLOAT_SSIM = 0.10
+THRESH_STEP_FLOAT_SSIM = 0.002
+# float + L2
+THRESH_MIN_FLOAT_L2 = 0.005
+THRESH_STEP_FLOAT_L2 = 0.0005
+# float + ABS
+THRESH_MIN_FLOAT_ABS = 0.05
+THRESH_STEP_FLOAT_ABS = 0.005
+# uint8 + SSIM
+THRESH_MIN_UINT8_SSIM = 20
+THRESH_STEP_UINT8_SSIM = 1
+# uint8 + L2 (generally uneffective combination)
+THRESH_MIN_UINT8_L2 = 5
+THRESH_STEP_UINT8_L2 = 1
+# uint8 + ABS (generally uneffective combination)
+THRESH_MIN_UINT8_ABS = 10
+THRESH_STEP_UINT8_ABS = 1
+
+
+class FineTuner:
+    def __init__(self, resmaps, color, method, dtype="float64", filenames=None):
+        if dtype == "float64":
+            if method in ["ssim", "mssim"]:
+                self.thresh_min = THRESH_MIN_FLOAT_SSIM
+                self.thresh_step = THRESH_STEP_FLOAT_SSIM
+                # self.vmin_resmap = 0.0
+                # self.vmax_resmap = 1.0
+            elif method == "l2":
+                self.thresh_min = THRESH_MIN_FLOAT_L2
+                self.thresh_step = THRESH_STEP_FLOAT_L2
+                self.vmin_resmap = 0.0
+                self.vmax_resmap = np.amax(self.resmaps)
+            elif method == "abs":
+                self.thresh_min = THRESH_MIN_FLOAT_ABS
+                self.thresh_step = THRESH_STEP_FLOAT_ABS
+                # self.vmin_resmap = 0.0
+                # self.vmax_resmap = 1.0
+
+        elif dtype == "uint8":
+            if method in ["ssim", "mssim"]:
+                self.thresh_min = THRESH_MIN_UINT8_SSIM
+                self.thresh_step = THRESH_STEP_UINT8_SSIM
+                # self.vmin_resmap = 0
+                # self.vmax_resmap = 255
+            elif method == "l2":
+                self.thresh_min = THRESH_MIN_UINT8_L2
+                self.thresh_step = THRESH_STEP_UINT8_L2
+                # self.vmin_resmap = 0
+                # self.vmax_resmap = np.amax(self.resmaps)
+            elif method == "abs":
+                self.thresh_min = THRESH_MIN_UINT8_ABS
+                self.thresh_step = THRESH_STEP_UINT8_ABS
+                # self.vmin_resmap = 0
+                # self.vmax_resmap = 1.0
 
 
 def calculate_largest_areas(resmaps, thresholds):
@@ -61,6 +118,7 @@ def calculate_largest_areas(resmaps, thresholds):
 def main(args):
     # Get validation arguments
     model_path = args.path
+    color = args.color  # NOT YET TAKEN INTO ACCOUNT
     method = args.method
     dtype = args.dtype
 
@@ -79,9 +137,6 @@ def main(args):
     vmax = info["preprocessing"]["vmax"]
     nb_validation_images = info["data"]["nb_validation_images"]
 
-    # get the correct preprocessing function
-    preprocessing_function = get_preprocessing_function(architecture)
-
     # ========= LOAD AND PREPROCESS VALIDATION & FINETUNING IMAGES =============
 
     # initialize preprocessor
@@ -90,7 +145,6 @@ def main(args):
         rescale=rescale,
         shape=shape,
         color_mode=color_mode,
-        preprocessing_function=preprocessing_function,
     )
 
     # -------------------------------------------------------------------
@@ -115,6 +169,7 @@ def main(args):
         imgs_pred=imgs_val_pred,
         vmin=vmin,
         vmax=vmax,
+        color="grayscale",
         method=method,
         dtype=dtype,
         filenames=filenames_val,
@@ -134,7 +189,7 @@ def main(args):
     filenames_test = finetuning_generator.filenames
 
     # select a representative subset of test images for finetuning
-    #  using stratified sampling
+    # using stratified sampling
     assert "good" in finetuning_generator.class_indices
     index_array = finetuning_generator.index_array
     classes = finetuning_generator.classes
@@ -165,6 +220,7 @@ def main(args):
         imgs_pred=imgs_ft_pred,
         vmin=vmin,
         vmax=vmax,
+        color="grayscale",
         method=method,
         dtype=dtype,
         filenames=filenames_ft,
@@ -184,8 +240,7 @@ def main(args):
     }
 
     # initialize discrete min_area values
-    min_areas = np.arange(start=START_MIN_AREA, stop=STOP_MIN_AREA, step=STEP_MIN_AREA)
-    length = len(min_areas)
+    min_areas = np.arange(start=START_MIN_AREA, stop=STOP_MIN_AREA, step=STEP_MIN_AREA,)
 
     # initialize thresholds
     thresholds = np.arange(
@@ -195,13 +250,17 @@ def main(args):
     )
 
     # compute largest anomaly areas in resmaps for increasing thresholds
-    print("step 1/2: computing largest anomaly areas for increasing thresholds...")
+    logger.info(
+        "step 1/2: computing largest anomaly areas for increasing thresholds..."
+    )
     largest_areas = calculate_largest_areas(
         resmaps=tensor_val.resmaps, thresholds=thresholds,
     )
 
     # select best minimum area and threshold pair to use for testing
-    print("step 2/2: selecting best minimum area and threshold pair for testing...")
+    logger.info(
+        "step 2/2: selecting best minimum area and threshold pair for testing..."
+    )
     printProgressBar(
         0, len(min_areas), prefix="Progress:", suffix="Complete", length=80
     )
@@ -272,7 +331,7 @@ def main(args):
         "dtype": dtype,
         "split": FINETUNE_SPLIT,
     }
-    print("finetuning results: {}".format(finetuning_result))
+    logger.info("finetuning results: {}".format(finetuning_result))
 
     # save validation result
     with open(os.path.join(save_dir, "finetuning_result.json"), "w") as json_file:
@@ -288,8 +347,6 @@ def main(args):
 
 def plot_min_area_threshold(dict_finetune, index_best=None, save_dir=None):
     df_finetune = pd.DataFrame.from_dict(dict_finetune)
-    min_areas = dict_finetune["min_area"]
-    thresholds = dict_finetune["threshold"]
     with plt.style.context("seaborn-darkgrid"):
         df_finetune.plot(x="min_area", y=["threshold"], figsize=(12, 8))
         if index_best is not None:
@@ -306,7 +363,9 @@ def plot_min_area_threshold(dict_finetune, index_best=None, save_dir=None):
         plt.show()
     if save_dir is not None:
         plt.savefig(os.path.join(save_dir, "min_area_threshold_plot.png"))
-        print("min_area threshold plot successfully saved at:\n {}".format(save_dir))
+        logger.info(
+            "min_area threshold plot successfully saved at:\n {}".format(save_dir)
+        )
         plt.close()
     return
 
@@ -324,7 +383,7 @@ def plot_scores(dict_finetune, index_best=None, save_dir=None):
         plt.show()
     if save_dir is not None:
         plt.savefig(os.path.join(save_dir, "scores_plot.png"))
-        print("scores plot successfully saved at:\n {}".format(save_dir))
+        logger.info("scores plot successfully saved at:\n {}".format(save_dir))
         plt.close()
     return
 
@@ -341,10 +400,20 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "-m",
+        "--color",
+        required=False,
+        metavar="",
+        choices=["rgb", "grayscale"],
+        default="grayscale",
+        help="grayscale or rgb resmaps",
+    )
+
+    parser.add_argument(
+        "-m",
         "--method",
         required=False,
         metavar="",
-        choices=["ssim", "l2"],
+        choices=["ssim", "l2", "abs"],
         default="ssim",
         help="method for generating resmaps: 'ssim' or 'l2'",
     )
@@ -365,7 +434,7 @@ if __name__ == "__main__":
 
 # Example of command to initiate finetuning with different resmap processing arguments (best combination: -m ssim -t float64)
 
-# python3 finetune.py -p saved_models/mvtec/capsule/mvtecCAE/ssim/13-06-2020_15-35-10/mvtecCAE_b8_e39.hdf5 -m ssim -t float64
+# python3 finetune.py -p saved_models/LEGO_light/SV/mvtecCAE/mssim/20-09-2020_14-21-51/mvtecCAE_b8_e148.hdf5 -m ssim -t float64
 # python3 finetune.py -p saved_models/mvtec/capsule/mvtecCAE/ssim/13-06-2020_15-35-10/mvtecCAE_b8_e39.hdf5 -m ssim -t uint8
 # python3 finetune.py -p saved_models/mvtec/capsule/mvtecCAE/ssim/13-06-2020_15-35-10/mvtecCAE_b8_e39.hdf5 -m l2 -t float64
 # python3 finetune.py -p saved_models/mvtec/capsule/mvtecCAE/ssim/13-06-2020_15-35-10/mvtecCAE_b8_e39.hdf5 -m l2 -t uint8

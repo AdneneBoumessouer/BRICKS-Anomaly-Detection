@@ -1,21 +1,23 @@
-# Anomaly Detection
-This project proposes an end-to-end framework for semi-supervised Anomaly Detection and Segmentation in images based on Deep Learning.
+## Warning: This project is currently still in progress...
+
+# Unsupervised Anomaly Detection
+This project proposes an end-to-end framework for unsupervised Anomaly Detection and Localization in images based on Convolutional Auto-Encoders.
 
 ## Method Overview
-The proposed method employs a thresholded pixel-wise difference between reconstructed image and input image to localize anomaly. The threshold is determined by first using a subset of anomalous-free training images, i.e validation images, to determine possible values of minimum area and threshold pairs followed by using a subset of both anomalous-free and anomalous test images to select the best pair for classification and segmentation of the remaining test images.
+The proposed method employs a thresholded pixel-wise difference between reconstructed image and input image to localize anomaly. The threshold is determined by using a subset of anomalous-free training images, i.e validation images, to determine a classification threshold to use at test-time.
 
-It is inspired to a great extent by the papers [MVTec AD — A Comprehensive Real-World Dataset for Unsupervised Anomaly Detection](https://www.mvtec.com/fileadmin/Redaktion/mvtec.com/company/research/mvtec_ad.pdf) and [Improving Unsupervised Defect Segmentation by Applying Structural Similarity to Autoencoders](https://arxiv.org/abs/1807.02011).
-The method is devided in 3 steps: training, finetuning and testing.
+It is inspired to by the papers [MVTec AD — A Comprehensive Real-World Dataset for Unsupervised Anomaly Detection](https://www.mvtec.com/fileadmin/Redaktion/mvtec.com/company/research/mvtec_ad.pdf) and [Improving Unsupervised Defect Segmentation by Applying Structural Similarity to Autoencoders](https://arxiv.org/abs/1807.02011).
+The method is devided in 3 steps: training, validating and testing.
 
-![Image of Yaktocat](overview.png)
+<!-- ![Image of Yaktocat](overview.png) -->
 
-**NOTE: Why Semi-Supervised and not Unsupervised?**
+<!-- **NOTE: Why Semi-Supervised and not Unsupervised?**
 
-The method proposed in the [MVTec paper](https://www.mvtec.com/fileadmin/Redaktion/mvtec.com/company/research/mvtec_ad.pdf) is unsupervised, as a subset containing only anomaly-free training images (validation set) are used during the validation step to determine the threshold for classification and segmentation of test images. However, the validation algorithm is based on a user input parameter, the minimum defect area, which definition remains unclear and unexplained in the aforementioned paper. Because the choice of this parameter can greatly influence the classification and segmentation results and in an effort to automate the process and remove the need for all user input, we developed a finetuning algorithm that computes different thresholds corresponding to a wide range of discrete minimum defect areas using the validation set. Subsequently, a small subset of anomaly and anomaly-free images of the test set (finetuning set) is used to select the best minimum defect area and threshold pait that will finally be used to classify and segment the remaining test images. Since our method relies on test images for finetuning, we describe it as being semi-supervised.
+The method proposed in the [MVTec paper](https://www.mvtec.com/fileadmin/Redaktion/mvtec.com/company/research/mvtec_ad.pdf) is unsupervised, as a subset containing only anomaly-free training images (validation set) are used during the validation step to determine the threshold for classification and segmentation of test images. However, the validation algorithm is based on a user input parameter, the minimum defect area, which definition remains unclear and unexplained in the aforementioned paper. Because the choice of this parameter can greatly influence the classification and segmentation results and in an effort to automate the process and remove the need for all user input, we developed a finetuning algorithm that computes different thresholds corresponding to a wide range of discrete minimum defect areas using the validation set. Subsequently, a small subset of anomaly and anomaly-free images of the test set (finetuning set) is used to select the best minimum defect area and threshold pait that will finally be used to classify and segment the remaining test images. Since our method relies on test images for finetuning, we describe it as being semi-supervised. -->
 
-## Dataset
+<!-- ## Dataset
 
-The proposed framework has been tested successfully on the [MVTec dataset](https://www.mvtec.com/company/research/datasets/mvtec-ad/).
+The proposed framework has been tested successfully on the [MVTec dataset](https://www.mvtec.com/company/research/datasets/mvtec-ad/). -->
 
 ## Models
 
@@ -57,36 +59,6 @@ Before installing dependencies, we highly recommend setting up a virtual anviron
 The above should be all you need on Linux systems and cloud computing environments like Google Colab and AWS EC2. If you are using ktrain on a Windows computer, you can follow the more detailed instructions provided [here](https://github.com/amaiya/ktrain/blob/master/FAQ.md#how-do-i-install-ktrain-on-a-windows-machine) that include some extra steps.
 
 
-
-### Download the Dataset
-1. Download the mvtec dataset [here](https://www.mvtec.com/company/research/datasets/mvtec-ad/) and save it to a directory of your choice (e.g in /Downloads)
-2. Extract the compressed image files.
-3. Create a folder in the project directory to store the image files.
-4. Move the extracted image files to that folder.
-
-
-Directory Structure using mvtec dataset
-------------
-For the scripts to work propoerly, it is required for the folder containing the training and test images to have a specific structure. 
-In the case of using the *mvtec* dataset, here is an example of how the directory stucture should look like:
-
-    ├── bottle
-    │   ├── ground_truth
-    │   │   ├── broken_large
-    │   │   ├── broken_small
-    │   │   └── contamination
-    │   ├── test
-    │   │   ├── broken_large
-    │   │   ├── broken_small
-    │   │   ├── contamination
-    │   │   └── good
-    │   └── train
-    │       └── good
-    ...
-
-
---------
-
 Directory Structure using your own dataset
 ------------
 To train with your own dataset, you need to have a comparable directory structure. For example:
@@ -94,21 +66,29 @@ To train with your own dataset, you need to have a comparable directory structur
     ├── class1
     │   ├── test
     │   │   ├── good
-    │   │   ├── defect
-    │   └── train
+    │   │   ├── defect_type_1
+    │   │   ├── defect_type_2
+    │   │   └── ...
+    │   │── train
+    │   │   └── good
+    │   └── val
     │       └── good
     ├── class2
     │   ├── test
     │   │   ├── good
-    │   │   ├── defect
-    │   └── train
+    │   │   ├── defect_type_1
+    │   │   ├── defect_type_2
+    │   │   └── ...
+    │   │── train
+    │   │   └── good
+    │   └── val
     │       └── good
     ...
 
 
 --------
 
-## Usage
+<!-- ## Usage
 
 ### Training (`train.py`)
 
@@ -179,10 +159,10 @@ optional arguments:
 Example usage:
 ```
 python3 test.py -p saved_models/mvtec/capsule/mvtecCAE/ssim/13-06-2020_15-35-10/mvtecCAE_b8_e39.hdf5
-```
+``` -->
 
 
-Project Organization
+<!-- Project Organization
 ------------
 
     ├── mvtec                       <- folder containing all mvtec classes.
@@ -199,7 +179,7 @@ Project Organization
     └── test.py                     <- test script to classify images of the test set using finetuned parameters.
 
 
---------
+-------- -->
 
 ## Authors
 
