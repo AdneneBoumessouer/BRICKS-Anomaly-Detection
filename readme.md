@@ -1,6 +1,6 @@
-# This project is currently in progress.
+## Warning: This project is currently still in progress...
 
-# Unsupervided Anomaly Detection
+# Unsupervised Anomaly Detection
 This project proposes an end-to-end framework for unsupervised Anomaly Detection and Localization in images based on Convolutional Auto-Encoders.
 
 ## Method Overview
