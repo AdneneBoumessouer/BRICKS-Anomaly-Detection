@@ -18,7 +18,7 @@ START_MIN_AREA = 5
 STOP_MIN_AREA = 1005
 
 # path to save model
-saved_models_path = "saved_models/cb_test_run"
+saved_models_path = "saved_models/run_0_arch"
 
 # Inspection val and test image filenames for SV dataset
 FILENAMES_VAL_INSPECTION = [
