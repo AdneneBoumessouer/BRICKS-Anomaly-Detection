@@ -9,6 +9,7 @@
 *.ipynb
 *.svg
 test_*.py
+/test_*
 
 # Saved models and results
 /saved_models
