@@ -56,7 +56,7 @@ def inspect_images(model_path):
         imgs_input=imgs_val_input,
         imgs_pred=imgs_val_pred,
         filenames=config.FILENAMES_VAL_INSPECTION,
-        color="grayscale",
+        color_out="grayscale",
         vmin=vmin,
         vmax=vmax,
     )
@@ -91,7 +91,7 @@ def inspect_images(model_path):
         imgs_input=imgs_test_input,
         imgs_pred=imgs_test_pred,
         filenames=config.FILENAMES_TEST_INSPECTION,
-        color="grayscale",
+        color_out="grayscale",
         vmin=vmin,
         vmax=vmax,
     )
