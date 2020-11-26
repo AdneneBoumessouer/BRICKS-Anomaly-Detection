@@ -39,12 +39,15 @@ def inspect_images(model_path):
         batch_size=nb_validation_images, shuffle=False
     )
     # get indices of validation inspection images
-    arr_i = [
-        inspection_val_generator.filenames.index(filename) for filename in config.FILENAMES_VAL_INSPECTION
+    index_array = [
+        inspection_val_generator.filenames.index(filename)
+        for filename in config.FILENAMES_VAL_INSPECTION
     ]
 
     # get preprocessed validation images
-    imgs_val_input = inspection_val_generator.next()[0][arr_i]
+    imgs_val_input = inspection_val_generator._get_batches_of_transformed_samples(
+        index_array
+    )[0]
     # reconstruct inspection validation images (i.e predict)
     imgs_val_pred = model.predict(imgs_val_input)
 
@@ -66,16 +69,18 @@ def inspect_images(model_path):
     logger.info("generating inspection plots for test images...")
 
     nb_test_images = preprocessor.get_total_number_test_images()
-
     inspection_test_generator = preprocessor.get_test_generator(
         batch_size=nb_test_images, shuffle=False
     )
     # get indices of test inspection images
-    arr_i = [
-        inspection_test_generator.filenames.index(filename) for filename in config.FILENAMES_TEST_INSPECTION
+    index_array = [
+        inspection_test_generator.filenames.index(filename)
+        for filename in config.FILENAMES_TEST_INSPECTION
     ]
     # get preprocessed test images
-    imgs_test_input = inspection_test_generator.next()[0][arr_i]
+    imgs_test_input = inspection_test_generator._get_batches_of_transformed_samples(
+        index_array
+    )[0]
     # reconstruct inspection test images (i.e predict)
     imgs_test_pred = model.predict(imgs_test_input)
 
