@@ -38,17 +38,14 @@ def inspect_images(model_path):
     inspection_val_generator = preprocessor.get_val_generator(
         batch_size=nb_validation_images, shuffle=False
     )
-
-    imgs_val_input = inspection_val_generator.next()[0]
-    filenames_val = inspection_val_generator.filenames
-
     # get indices of validation inspection images
-    val_insp_i = [
-        filenames_val.index(filename) for filename in config.FILENAMES_VAL_INSPECTION
+    arr_i = [
+        inspection_val_generator.filenames.index(filename) for filename in config.FILENAMES_VAL_INSPECTION
     ]
-    imgs_val_input = imgs_val_input[val_insp_i]
 
-    # reconstruct validation inspection images (i.e predict)
+    # get preprocessed validation images
+    imgs_val_input = inspection_val_generator.next()[0][arr_i]
+    # reconstruct inspection validation images (i.e predict)
     imgs_val_pred = model.predict(imgs_val_input)
 
     # instantiate ResmapPlotter object to compute resmaps
@@ -73,16 +70,12 @@ def inspect_images(model_path):
     inspection_test_generator = preprocessor.get_test_generator(
         batch_size=nb_test_images, shuffle=False
     )
-    # get preprocessed test images
-    imgs_test_input = inspection_test_generator.next()[0]
-    filenames_test = inspection_test_generator.filenames
-
     # get indices of test inspection images
-    test_insp_i = [
-        filenames_test.index(filename) for filename in config.FILENAMES_TEST_INSPECTION
+    arr_i = [
+        inspection_test_generator.filenames.index(filename) for filename in config.FILENAMES_TEST_INSPECTION
     ]
-    imgs_test_input = imgs_test_input[test_insp_i]
-
+    # get preprocessed test images
+    imgs_test_input = inspection_test_generator.next()[0][arr_i]
     # reconstruct inspection test images (i.e predict)
     imgs_test_pred = model.predict(imgs_test_input)
 
@@ -128,4 +121,3 @@ if __name__ == "__main__":
 
     # run main function
     inspect_images(model_path=args.path)
-

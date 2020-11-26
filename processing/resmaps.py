@@ -21,10 +21,10 @@ class ResmapCalculator:
         filenames=None,
         vmin=0.0,
         vmax=1.0,
-        dtype="float64",  # TODO remove attribute
+        dtype="float64",  # TODO remove support for uint8 and continue only with float64
     ):
         assert imgs_input.ndim == imgs_pred.ndim == 4
-        assert method in ["l1", "l2", "ssim"]
+        assert method in ["l1", "l2", "ssim", "combined"]
         assert color_out in ["grayscale", "rgb"]
         assert dtype in ["float64", "uint8"]
 
@@ -55,7 +55,7 @@ class ResmapCalculator:
 
         # set parameters for future segmentation of resmaps
         self.vmin_resmap = 0
-        self.vmax_resmap = np.amax(self.resmaps)
+        self.vmax_resmap = np.amax(self.resmaps)  # TODO test with 1.0
 
     def get_resmaps(self):
         return self.resmaps
@@ -85,6 +85,9 @@ def calculate_resmaps(
         scores, resmaps = resmaps_l1(imgs_input, imgs_pred)
     elif method == "l2":
         scores, resmaps = resmaps_l2(imgs_input, imgs_pred)
+    elif method == "combined":
+        scores, resmaps = resmaps_combined(imgs_input, imgs_pred)
+    # change dtype to unsigned integer
     if dtype == "uint8":
         resmaps = img_as_ubyte(resmaps)
     return scores, resmaps
@@ -127,5 +130,12 @@ def resmaps_l1(imgs_input, imgs_pred):
 
 def resmaps_l2(imgs_input, imgs_pred):
     resmaps = (imgs_input - imgs_pred) ** 2
+    scores = np.sum(resmaps, axis=0).flatten()
+    return scores, resmaps
+
+
+def resmaps_combined(imgs_input, imgs_pred):
+    resmaps = 0.7*resmaps_ssim(imgs_input, imgs_pred) + \
+        1.0*resmaps_l1(imgs_input, imgs_pred)
     scores = np.sum(resmaps, axis=0).flatten()
     return scores, resmaps
