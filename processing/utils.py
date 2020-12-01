@@ -81,12 +81,13 @@ def list_imgs(dirName):
 def printProgressBar(
     iteration,
     total,
-    prefix="",
-    suffix="",
+    prefix="Progress",
+    suffix="Complete",
     decimals=1,
     length=100,
     fill="█",
     printEnd="\r",
+    verbose=1,
 ):
     """
     Call in a loop to create terminal progress bar
@@ -100,13 +101,16 @@ def printProgressBar(
         fill        - Optional  : bar fill character (Str)
         printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
     """
-    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-    filledLength = int(length * iteration // total)
-    bar = fill * filledLength + "-" * (length - filledLength)
-    print("\r%s |%s| %s%% %s" % (prefix, bar, percent, suffix), end=printEnd)
-    # Print New Line on Complete
-    if iteration == total:
-        print()
+    if verbose:
+        percent = ("{0:." + str(decimals) + "f}").format(
+            100 * (iteration / float(total))
+        )
+        filledLength = int(length * iteration // total)
+        bar = fill * filledLength + "-" * (length - filledLength)
+        print("\r%s |%s| %s%% %s" % (prefix, bar, percent, suffix), end=printEnd)
+        # Print New Line on Complete
+        if iteration == total:
+            print()
 
 
 def is_rgb(imgs):

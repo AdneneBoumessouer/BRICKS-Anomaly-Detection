@@ -17,7 +17,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def generate_labeled_imgs(resmap, filename, min_area=20, min_area_plot=5, save_dir=None):
+def generate_labeled_imgs(
+    resmap, filename, min_area=20, min_area_plot=5, save_dir=None
+):
     """
     Generates labeled images for increasing thresholds cooresponding
     to a given resmap containing bboxes for regions which areas are bigger
@@ -33,8 +35,7 @@ def generate_labeled_imgs(resmap, filename, min_area=20, min_area_plot=5, save_d
     ths = np.arange(start=th_min, stop=th_max, step=th_step, dtype="float")
 
     logger.info("generating labeled resmaps for {}".format(filename))
-    printProgressBar(0, len(ths), prefix="Progress:",
-                     suffix="Complete", length=80)
+    printProgressBar(0, len(ths), prefix="Progress:", suffix="Complete", length=80)
 
     # label resmaps with increasing thresholds
     for i, th in enumerate(ths):
@@ -43,35 +44,51 @@ def generate_labeled_imgs(resmap, filename, min_area=20, min_area_plot=5, save_d
         regionprops = measure.regionprops(labeled)
         regionprops.sort(key=lambda x: x.area, reverse=True)
 
-        list_area_bbox = [(regionprop.area, regionprop.bbox)
-                          for regionprop in regionprops]
+        list_area_bbox = [
+            (regionprop.area, regionprop.bbox) for regionprop in regionprops
+        ]
 
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 10))
         resmap_overlay = color.label2rgb(
-            labeled, resmap, alpha=0.5, bg_label=0, image_alpha=1, kind="overlay")
+            labeled, resmap, alpha=0.5, bg_label=0, image_alpha=1, kind="overlay"
+        )
         ax.imshow(resmap_overlay)
         if list_area_bbox:
             for area, bbox in list_area_bbox:
                 if area > min_area_plot:
-                    edgecolor = "red" if area >= min_area else "yellow"
+                    # edgecolor = "red" if area >= min_area else "yellow"
                     minr, minc, maxr, maxc = bbox
                     rect = mpatches.Rectangle(
-                        (minc, minr), maxc - minc, maxr - minr, fill=False, edgecolor=edgecolor, linewidth=1.0)
+                        (minc, minr),
+                        maxc - minc,
+                        maxr - minr,
+                        fill=False,
+                        edgecolor="yellow",  # edgecolor
+                        linewidth=1.0,
+                    )
                     ax.add_patch(rect)
-                    ax.text(x=minc, y=minr-5, s=str(area), verticalalignment='top',
-                            horizontalalignment='left', color=edgecolor, fontweight='bold', fontsize=10)
+                    ax.text(
+                        x=minc,
+                        y=minr - 5,
+                        s=str(area),
+                        verticalalignment="top",
+                        horizontalalignment="left",
+                        color="yellow",  # edgecolor
+                        fontweight="bold",
+                        fontsize=10,
+                    )
         ax.set_axis_off()
-        ax.set_title(
-            "Labeled Resmap of: {}\nmin_area = {} | threshold = {:.3}".format(filename, min_area, th))
+        ax.set_title("Labeled Resmap of: {}\nthreshold = {:.3}".format(filename, th))
         fig.savefig(os.path.join(save_dir, "{}.png".format(i)))
         plt.close(fig)
 
-        printProgressBar(i+1, len(ths), prefix="Progress:",
-                         suffix="Complete", length=80)
+        printProgressBar(
+            i + 1, len(ths), prefix="Progress:", suffix="Complete", length=80
+        )
     return
 
 
-def main(model_path, method, subset):
+def main(model_path, method, subset, view):
     # load model for inspection
     logger.info("loading model for inspection...")
     model, info, _ = utils.load_model_HDF5(model_path)
@@ -89,17 +106,26 @@ def main(model_path, method, subset):
     )
     if subset == "val":
         generator = preprocessor.get_val_generator(
-            batch_size=nb_validation_images, shuffle=False)
-        filenames = config.FILENAMES_VAL_INSPECTION
+            batch_size=nb_validation_images, shuffle=False
+        )
+        filenames_insp = config.FILENAMES_VAL_INSPECTION
     else:
         nb_test_images = preprocessor.get_total_number_test_images()
         generator = preprocessor.get_test_generator(
-            batch_size=nb_test_images, shuffle=False)
-        filenames = config.FILENAMES_TEST_INSPECTION
+            batch_size=nb_test_images, shuffle=False
+        )
+        filenames_insp = config.FILENAMES_TEST_INSPECTION
 
     # get index array for filenames to label
+    filenames = [
+        filename
+        for filename in filenames_insp
+        if filename.split("/")[-1].split("_")[0] == view
+    ]
     arr_i = [
-        generator.filenames.index(filename) for filename in filenames
+        generator.filenames.index(filename)
+        for filename in filenames_insp
+        if filename.split("/")[-1].split("_")[0] == view
     ]
     # TODO FIX: get_val_generator() with test images ambegious
 
@@ -120,13 +146,15 @@ def main(model_path, method, subset):
 
     for resmap, filename in list(zip(resmaps, filenames)):
         # create save dir
-        save_dir = os.path.join(os.path.dirname(
-            model_path), "labeling", method, subset, filename)
-        if not(os.path.exists(save_dir) and os.path.isdir(save_dir)):
+        save_dir = os.path.join(
+            os.path.dirname(model_path), "labeling", method, subset, view, filename
+        )
+        if not (os.path.exists(save_dir) and os.path.isdir(save_dir)):
             os.makedirs(save_dir)
         # generate and save labeled resmaps for increasing thresholds
         generate_labeled_imgs(
-            resmap, filename, min_area=25, min_area_plot=5, save_dir=save_dir)
+            resmap, filename, min_area=25, min_area_plot=5, save_dir=save_dir
+        )
     return
 
 
@@ -140,17 +168,40 @@ if __name__ == "__main__":
     )
     # TODO add color_out in args
     parser.add_argument(
-        "-m", "--method", type=str, required=False, metavar="", choices=["ssim", "l1", "l2", "combined"], default="l1", help="method used to compute resmaps"
+        "-m",
+        "--method",
+        type=str,
+        required=False,
+        metavar="",
+        choices=["ssim", "l1", "l2", "combined"],
+        default="l1",
+        help="method used to compute resmaps",
     )
     parser.add_argument(
-        "-s", "--subset", type=str, required=True, metavar="", choices=["val", "test"], default="val", help="subset of inspection images (in config.py) to label"
+        "-s",
+        "--subset",
+        type=str,
+        required=True,
+        metavar="",
+        choices=["val", "test"],
+        default="val",
+        help="subset of inspection images (in config.py) to label",
+    )
+    parser.add_argument(
+        "-v",
+        "--view",
+        type=str,
+        required=True,
+        metavar="",
+        choices=["a00", "a45"],
+        help="view dataset to perform classification on",
     )
 
     # parse arguments
     args = parser.parse_args()
 
     # run main function
-    main(model_path=args.path, method=args.method, subset=args.subset)
+    main(model_path=args.path, method=args.method, subset=args.subset, view=args.view)
 
 
-# python3 label.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 --subset val
+# python3 label.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 --method l1 --subset val --view a00
