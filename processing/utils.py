@@ -158,3 +158,44 @@ def list_imgs(dirName):
         ]
     return listOfFiles
 
+
+def get_stats(df_clf, detector_type="cb"):
+    if detector_type == "cb":
+        y_pred = "y_pred"
+    elif detector_type == "lc":
+        y_pred = "y_pred_lc"
+    else:
+        y_pred = "y_pred_hc"
+
+    categories = sorted(list(set(df_clf["category"].values)))
+    TPR = []
+    TNR = []
+
+    # stats per category
+    for category in categories:
+        df_clf_cat = df_clf[df_clf["category"] == category]
+        accuracy = np.count_nonzero(df_clf_cat[y_pred] == df_clf_cat["y_true"]) / len(
+            df_clf_cat
+        )
+        if category == "good":
+            TNR.append(accuracy)
+            TPR.append(None)
+        else:
+            TNR.append(None)
+            TPR.append(accuracy)
+
+    # stats overall
+    categories.append("overall")
+    df_clf_good = df_clf[df_clf["category"] == "good"]
+    tnr_total = np.count_nonzero(df_clf_good[y_pred] == df_clf_good["y_true"]) / len(
+        df_clf_good
+    )
+    TNR.append(tnr_total)
+    df_clf_defect = df_clf[df_clf["category"] != "good"]
+    tpr_total = np.count_nonzero(
+        df_clf_defect[y_pred] == df_clf_defect["y_true"]
+    ) / len(df_clf_defect)
+    TPR.append(tpr_total)
+    df_stats = pd.DataFrame.from_dict({"category": categories, "TPR": TPR, "TNR": TNR})
+    return df_stats
+

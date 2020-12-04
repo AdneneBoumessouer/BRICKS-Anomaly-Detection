@@ -4,6 +4,7 @@ import json
 import numpy as np
 from skimage import measure
 from processing.preprocessing import Preprocessor
+from processing import detection
 from processing import utils
 from processing.utils import printProgressBar
 from processing.resmaps import ResmapCalculator
@@ -13,35 +14,6 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-def estimate_threshold(resmaps_val, min_area=25, verbose=1):
-    # initialize thresholds
-    th_min = 0.18  # 0.2, np.amin(resmaps_val)
-    th_step = 2e-3  # 5e-3
-    th_max = np.amax(resmaps_val) + th_step
-    ths = np.arange(start=th_min, stop=th_max, step=th_step, dtype="float")
-
-    printProgressBar(0, len(ths), length=80, verbose=verbose)
-
-    # loop over thresholds
-    for i, th in enumerate(ths):
-        imgs_binary = resmaps_val > th
-        imgs_labeled = np.array([measure.label(binary) for binary in imgs_binary])
-        areas = np.array(
-            [
-                regionprop.area
-                for labeled in imgs_labeled
-                for regionprop in measure.regionprops(labeled)
-            ]
-        )
-        largest_area = np.amax(areas)
-        if largest_area < min_area:
-            break
-        printProgressBar(i + 1, len(ths), length=80, verbose=verbose)
-
-    printProgressBar(len(ths), len(ths), length=80, verbose=verbose)
-    return th
 
 
 def validate(model_path, view, method, min_area):
@@ -81,15 +53,25 @@ def validate(model_path, view, method, min_area):
         filenames=filenames,
         vmin=vmin,
         vmax=vmax,
-        # dtype="float64",
     )
     resmaps_val = RC_val.get_resmaps()
 
-    # estimate threshold
-    th = estimate_threshold(resmaps_val, min_area=min_area)
+    # instantiate detectors
+    detector_lc = detection.LowContrastAnomalyDetector(vmax=0.2)
+    detector_hc = detection.HighContrastAnomalyDetector(vmin=0.2)
+
+    # fit detectors
+    min_area_lc = detector_lc.fit(resmaps_val)
+    threshold_hc = detector_hc.fit(resmaps_val, min_area=min_area)
 
     # save validation results
-    validation_result = {"min_area": min_area, "th": th}
+    validation_result = {
+        "LowContrastAnomalyDetector": {"min_area_lc": min_area_lc},
+        "HighContrastAnomalyDetector": {
+            "min_area_hc": min_area,
+            "threshold_hc": threshold_hc,
+        },
+    }
 
     # save validation result
     save_dir = os.path.join(os.path.dirname(model_path), "validation", method, view)
