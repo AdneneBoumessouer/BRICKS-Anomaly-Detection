@@ -67,15 +67,34 @@ def load_model_HDF5(model_path):
     return model, info, history
 
 
-def list_imgs(dirName):
-    listOfFiles = list()
-    for (dirpath, dirnames, filenames) in os.walk(dirName):
-        listOfFiles += [
-            os.path.join(dirpath, filename)
-            for filename in filenames
-            if filename.lower().endswith((".png", ".jpg", ".jpeg", ".tiff", ".bmp"))
+def get_indices(generator, view, category=None):
+    if category is not None:
+        index_arr_cat = np.nonzero(
+            generator.classes == generator.class_indices[category]
+        )[0]
+        filenames_cat = [generator.filenames[i] for i in index_arr_cat]
+        filenames = [
+            filename
+            for filename in filenames_cat
+            if filename.split("/")[-1].split("_")[0] == view
         ]
-    return listOfFiles
+        index_arr = [
+            index_arr_cat[i]
+            for i, filename in enumerate(filenames_cat)
+            if filename.split("/")[-1].split("_")[0] == view
+        ]
+    else:
+        filenames = [
+            filename
+            for filename in generator.filenames
+            if filename.split("/")[-1].split("_")[0] == view
+        ]
+        index_arr = [
+            i
+            for i, filename in enumerate(generator.filenames)
+            if filename.split("/")[-1].split("_")[0] == view
+        ]
+    return index_arr, filenames
 
 
 def printProgressBar(
@@ -127,4 +146,15 @@ def save_dataframe_as_text_file(df, save_dir, filename):
     with open(os.path.join(save_dir, filename), "w+") as f:
         f.write(df.to_string(header=True, index=True))
         print("[INFO] validation_results.txt saved at {}".format(save_dir))
+
+
+def list_imgs(dirName):
+    listOfFiles = list()
+    for (dirpath, dirnames, filenames) in os.walk(dirName):
+        listOfFiles += [
+            os.path.join(dirpath, filename)
+            for filename in filenames
+            if filename.lower().endswith((".png", ".jpg", ".jpeg", ".tiff", ".bmp"))
+        ]
+    return listOfFiles
 

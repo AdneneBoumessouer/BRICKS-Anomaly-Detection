@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 
 def estimate_threshold(resmaps_val, min_area=25, verbose=1):
     # initialize thresholds
-    th_max = np.amax(resmaps_val)
-    th_min = np.amin(resmaps_val)
+    th_min = 0.18  # 0.2, np.amin(resmaps_val)
     th_step = 2e-3  # 5e-3
+    th_max = np.amax(resmaps_val) + th_step
     ths = np.arange(start=th_min, stop=th_max, step=th_step, dtype="float")
 
     printProgressBar(0, len(ths), length=80, verbose=verbose)
@@ -65,20 +65,8 @@ def validate(model_path, view, method, min_area):
         batch_size=nb_validation_images, shuffle=False
     )
 
-    # retrieve validation images for front view a00
-    # TODO unelegant code: generator.filenames scanned two times
-    # views = ["a00", "a45"]
-    # for view in views:
-    filenames = [
-        filename
-        for filename in val_generator.filenames
-        if filename.split("/")[-1].split("_")[0] == view
-    ]
-    index_array = [
-        i
-        for i, filename in enumerate(val_generator.filenames)
-        if filename.split("/")[-1].split("_")[0] == view
-    ]
+    # retrieve validation images for specified view
+    index_array, filenames = utils.get_indices(val_generator, view)
     imgs_val_input = val_generator._get_batches_of_transformed_samples(index_array)[0]
 
     # reconstruct validation inspection images (i.e predict)
@@ -93,7 +81,7 @@ def validate(model_path, view, method, min_area):
         filenames=filenames,
         vmin=vmin,
         vmax=vmax,
-        dtype="float64",
+        # dtype="float64",
     )
     resmaps_val = RC_val.get_resmaps()
 
@@ -104,7 +92,7 @@ def validate(model_path, view, method, min_area):
     validation_result = {"min_area": min_area, "th": th}
 
     # save validation result
-    save_dir = os.path.join(os.path.dirname(model_path), "validation", view)
+    save_dir = os.path.join(os.path.dirname(model_path), "validation", method, view)
     if not (os.path.exists(save_dir) and os.path.isdir(save_dir)):
         os.makedirs(save_dir)
     with open(os.path.join(save_dir, "result_" + view + ".json"), "w") as json_file:
@@ -151,4 +139,4 @@ if __name__ == "__main__":
         model_path=args.path, view=args.view, method=args.method, min_area=args.area
     )
 
-# python3 validate.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a00 -a 155 -m l1
+# python3 validate.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a00 -a 50 -m l2

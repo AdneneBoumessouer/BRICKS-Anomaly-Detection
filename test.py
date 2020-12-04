@@ -67,19 +67,10 @@ def main(model_path, view, method, min_area, th):
         batch_size=nb_test_images, shuffle=False
     )
 
-    # views = ["a00", "a45"]
-    # for view, min_area, th in list(zip(views, min_areas, ths)):
+    # test_generator.
+
     # retrieve test images
-    filenames = [
-        filename
-        for filename in test_generator.filenames
-        if filename.split("/")[-1].split("_")[0] == view
-    ]
-    index_array = [
-        i
-        for i, filename in enumerate(test_generator.filenames)
-        if filename.split("/")[-1].split("_")[0] == view
-    ]
+    index_array, filenames = utils.get_indices(test_generator, view)
     imgs_test_input = test_generator._get_batches_of_transformed_samples(index_array)[0]
 
     # reconstruct validation inspection images (i.e predict)
@@ -94,7 +85,6 @@ def main(model_path, view, method, min_area, th):
         filenames=filenames,
         vmin=vmin,
         vmax=vmax,
-        dtype="float64",
     )
     resmaps_test = RC_test.get_resmaps()
 
@@ -105,20 +95,19 @@ def main(model_path, view, method, min_area, th):
     y_pred = predict_classes(resmaps_test=resmaps_test, min_area=min_area, th=th)
 
     # confusion matrix
-    tnr, fp, fn, tpr = confusion_matrix(y_true, y_pred, normalize="true").ravel()
+    tnr, _, _, tpr = confusion_matrix(y_true, y_pred, normalize="true").ravel()
 
-    # initialize dictionary to store test results
     test_result = {
         "method": method,
         "min_area": min_area,
         "threshold": th,
-        "TPR": tpr,
-        "TNR": tnr,
-        "score": (tpr + tnr) / 2,
+        "TPR": float(tpr),
+        "TNR": float(tnr),
+        "score": 0.7 * float(tpr) + 0.3 * float(tnr),
     }
 
     # create directory to save test results
-    save_dir = os.path.join(os.path.dirname(model_path), "test", view)
+    save_dir = os.path.join(os.path.dirname(model_path), "test", method, view)
     if not (os.path.exists(save_dir) and os.path.isdir(save_dir)):
         os.makedirs(save_dir)
 
@@ -134,6 +123,7 @@ def main(model_path, view, method, min_area, th):
         "accurate_predictions": np.array(y_true) == np.array(y_pred),
     }
     df_clf = pd.DataFrame.from_dict(classification)
+    df_clf.to_pickle(os.path.join(save_dir, "df_clf.pkl"))
 
     with open(os.path.join(save_dir, "classification_" + view + ".txt"), "w") as f:
         f.write(df_clf.to_string(header=True, index=True))
@@ -191,4 +181,4 @@ if __name__ == "__main__":
     main(args.path, args.view, args.method, args.area, args.threshold)
 
 # Examples of command to initiate testing
-# python3 test.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 --view a00 --method l1 --area 25 --threshold 0.5950
+# python3 test.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 --view a00 --method l2 --area 50 --threshold 0.2
