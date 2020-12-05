@@ -1,6 +1,7 @@
 import numpy as np
 from processing.utils import get_indices
 from processing.resmaps import ResmapCalculator
+from processing.anomaly import AnomalyMap
 from processing.utils import printProgressBar
 from skimage import measure
 
@@ -45,7 +46,7 @@ class HighContrastAnomalyDetector:
         self.min_area = min_area
 
     def predict(self, resmaps_test):
-        defects = []
+        anomaly_maps = []
         predictions = []
         # threshold resmaps
         imgs_binary = resmaps_test > self.threshold
@@ -60,15 +61,17 @@ class HighContrastAnomalyDetector:
             for regionprop in measure.regionprops(labeled):
                 if regionprop.area > self.min_area:
                     is_defective = 1
-                    props.append((regionprop.area, regionprop.bbox))
+                    props.append(regionprop)
             # append prediction
             predictions.append(is_defective)
             # append defective labeled image and its properties
             if is_defective:
-                defects.append((labeled, props))
+                anomaly_map = AnomalyMap(labeled, regionprops=props)
+                anomaly_map.remove_unsued_labels_from_labeled()
+                anomaly_maps.append(anomaly_map)
             else:
-                defects.append(None)
-        return predictions, defects
+                anomaly_maps.append(None)
+        return predictions, anomaly_maps
 
 
 class LowContrastAnomalyDetector:
@@ -94,7 +97,7 @@ class LowContrastAnomalyDetector:
         self.min_area = min_area
 
     def predict(self, resmaps_test):
-        defects = []
+        anomaly_maps = []
         predictions = []
         # threshold resmaps
         imgs_binary = (self.vmin < resmaps_test) & (resmaps_test < self.vmax)
@@ -109,13 +112,15 @@ class LowContrastAnomalyDetector:
             for regionprop in measure.regionprops(labeled):
                 if regionprop.area > self.min_area:
                     is_defective = 1
-                    props.append((regionprop.area, regionprop.bbox))
+                    props.append(regionprop)
             # append prediction
             predictions.append(is_defective)
             # append defective labeled image and its properties
             if is_defective:
-                defects.append((labeled, props))
+                anomaly_map = AnomalyMap(labeled, regionprops=props)
+                anomaly_map.remove_unsued_labels_from_labeled()
+                anomaly_maps.append(anomaly_map)
             else:
-                defects.append(None)
-        return predictions, defects
+                anomaly_maps.append(None)
+        return predictions, anomaly_maps
 

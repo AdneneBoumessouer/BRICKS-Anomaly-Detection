@@ -42,17 +42,15 @@ def generate_labeled_imgs(resmap, filename, min_area_plot=5, save_dir=None):
         regionprops = measure.regionprops(labeled)
         regionprops.sort(key=lambda x: x.area, reverse=True)
 
-        list_area_bbox = [
-            (regionprop.area, regionprop.bbox) for regionprop in regionprops
-        ]
+        props = [(regionprop.area, regionprop.bbox) for regionprop in regionprops]
 
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 10))
         resmap_overlay = color.label2rgb(
             labeled, resmap, alpha=0.5, bg_label=0, image_alpha=1, kind="overlay"
         )
         ax.imshow(resmap_overlay)
-        if list_area_bbox:
-            for area, bbox in list_area_bbox:
+        if props:
+            for area, bbox in props:
                 if area > min_area_plot:
                     # edgecolor = "red" if area >= min_area else "yellow"
                     minr, minc, maxr, maxc = bbox

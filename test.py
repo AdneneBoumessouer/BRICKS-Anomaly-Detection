@@ -8,6 +8,7 @@ from processing.preprocessing import Preprocessor
 from processing.resmaps import ResmapCalculator
 from processing import detection
 from processing import utils
+from processing.anomaly import generate_anomaly_localization_figure
 from processing.utils import printProgressBar
 from skimage import measure
 from sklearn.metrics import confusion_matrix
@@ -17,7 +18,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def main(model_path, view, method, min_area_lc, min_area_hc, threshold_hc):
+def main(
+    model_path, view, method, min_area_lc, min_area_hc, threshold_hc, localize=False
+):
     # load model and info
     model, info, _ = utils.load_model_HDF5(model_path)
     input_dir = info["data"]["input_directory"]
@@ -39,8 +42,8 @@ def main(model_path, view, method, min_area_lc, min_area_hc, threshold_hc):
     )
 
     # retrieve test images
-    index_array, filenames = utils.get_indices(test_generator, view)
-    categories = [filename.split("/")[0] for filename in filenames]
+    index_array, filenames_test = utils.get_indices(test_generator, view)
+    categories = [filename.split("/")[0] for filename in filenames_test]
     imgs_test_input = test_generator._get_batches_of_transformed_samples(index_array)[0]
 
     # reconstruct validation inspection images (i.e predict)
@@ -52,7 +55,7 @@ def main(model_path, view, method, min_area_lc, min_area_hc, threshold_hc):
         imgs_pred=imgs_test_pred,
         color_out="grayscale",
         method=method,
-        filenames=filenames,
+        filenames=filenames_test,
         vmin=vmin,
         vmax=vmax,
     )
@@ -68,12 +71,12 @@ def main(model_path, view, method, min_area_lc, min_area_hc, threshold_hc):
     detector_hc.set_threshold(threshold_hc)
 
     # predict
-    y_pred_lc, defects_lc = detector_lc.predict(resmaps_test)
-    y_pred_hc, defects_hc = detector_hc.predict(resmaps_test)
+    y_pred_lc, anomaly_maps_lc = detector_lc.predict(resmaps_test)
+    y_pred_hc, anomaly_maps_hc = detector_hc.predict(resmaps_test)
     y_pred = list(np.array(y_pred_lc) | np.array(y_pred_hc))
 
     # retrieve ground truth
-    y_true = [0 if "good" in filename.split("/") else 1 for filename in filenames]
+    y_true = [0 if "good" in filename.split("/") else 1 for filename in filenames_test]
 
     # confusion matrix
     tnr, _, _, tpr = confusion_matrix(y_true, y_pred, normalize="true").ravel()
@@ -104,7 +107,7 @@ def main(model_path, view, method, min_area_lc, min_area_hc, threshold_hc):
     # save classification of test images
     classification = {
         "category": categories,
-        "filename": filenames,
+        "filename": filenames_test,
         "y_pred_lc": y_pred_lc,
         "y_pred_hc": y_pred_hc,
         "y_pred": y_pred,
@@ -141,6 +144,30 @@ def main(model_path, view, method, min_area_lc, min_area_hc, threshold_hc):
 
     # print test params to console
     logger.info("\ntest_params: {}\n\n".format(test_params))
+
+    # generate and save anomaly figure
+    if localize:
+        n = len(imgs_test_input)
+        printProgressBar(0, n, prefix="Progress:", suffix="Complete", length=80)
+        for i in range(n):
+            printProgressBar(
+                i + 1,
+                n,
+                prefix="Progress:",
+                suffix="Complete | {}".format(filenames_test[i]),
+                length=80,
+            )
+            fig = generate_anomaly_localization_figure(
+                img_input=imgs_test_input[i],
+                img_pred=imgs_test_pred[i],
+                resmap=resmaps_test[i],
+                anomap_lc=anomaly_maps_lc[i],
+                anomap_hc=anomaly_maps_hc[i],
+                filename=filenames_test[i],
+            )
+            fig.savefig(
+                os.path.join(save_dir, "anomaly_localization", filenames_test[i])
+            )
 
 
 if __name__ == "__main__":
@@ -182,9 +209,12 @@ if __name__ == "__main__":
         metavar="",
         help="classification threshold",
     )
-    # parser.add_argument(
-    #     "-s", "--save", action="store_true", help="save segmented images",
-    # )
+    parser.add_argument(
+        "-loc",
+        "--localize",
+        action="store_false",
+        help="whether to generate and save anomaly localization figures for test images",
+    )
 
     args = parser.parse_args()
 
@@ -195,7 +225,8 @@ if __name__ == "__main__":
         args.min_area_lc,
         args.min_area_hc,
         args.threshold_hc,
+        args.localize,
     )
 
 # Examples of command to initiate testing
-# python3 test.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a00 -m l2 -alc 89 -ahc 50 -thc 0.2
+# python3 test.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a00 -m l2 -alc 89 -ahc 50 -thc 0.2 -loc True
