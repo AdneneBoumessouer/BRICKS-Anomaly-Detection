@@ -4,14 +4,13 @@ import json
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from processing.preprocessing import Preprocessor
-from processing.resmaps import ResmapCalculator
+from processing import preprocessing
+from processing import resmaps
 from processing import detection
 from processing import utils
-from processing.anomaly import generate_anomaly_localization_figure
-from processing.utils import printProgressBar
-from skimage import measure
+from processing import anomaly
 from sklearn.metrics import confusion_matrix
+from processing.utils import printProgressBar
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -31,7 +30,7 @@ def main(
     vmax = info["preprocessing"]["vmax"]
 
     # initialize preprocessor
-    preprocessor = Preprocessor(
+    preprocessor = preprocessing.Preprocessor(
         input_directory=input_dir, rescale=rescale, shape=shape, color_mode=color_mode,
     )
 
@@ -50,7 +49,7 @@ def main(
     imgs_test_pred = model.predict(imgs_test_input)
 
     # calculate resmaps
-    RC_test = ResmapCalculator(
+    RC_test = resmaps.ResmapCalculator(
         imgs_input=imgs_test_input,
         imgs_pred=imgs_test_pred,
         color_out="grayscale",
@@ -83,8 +82,7 @@ def main(
 
     # create directory to save test results and classification stats
     save_dir = os.path.join(os.path.dirname(model_path), "test", method, view)
-    if not (os.path.exists(save_dir) and os.path.isdir(save_dir)):
-        os.makedirs(save_dir)
+    os.makedirs(save_dir, exist_ok=True)
 
     # save test params
     test_params = {
@@ -125,6 +123,8 @@ def main(
     df_stats_lc = utils.get_stats(df_clf, detector_type="lc")
     df_stats_hc = utils.get_stats(df_clf, detector_type="hc")
 
+    os.makedirs(os.path.join(save_dir, "stats"), exist_ok=True)
+
     df_stats_cb.to_pickle(os.path.join(save_dir, "stats", "df_stats_cb.pkl"))
     df_stats_lc.to_pickle(os.path.join(save_dir, "stats", "df_stats_lc.pkl"))
     df_stats_hc.to_pickle(os.path.join(save_dir, "stats", "df_stats_hc.pkl"))
@@ -151,13 +151,13 @@ def main(
         printProgressBar(0, n, prefix="Progress:", suffix="Complete", length=80)
         for i in range(n):
             printProgressBar(
-                i + 1,
-                n,
+                iteration=i + 1,
+                total=n,
                 prefix="Progress:",
                 suffix="Complete | {}".format(filenames_test[i]),
                 length=80,
             )
-            fig = generate_anomaly_localization_figure(
+            fig = anomaly.generate_anomaly_localization_figure(
                 img_input=imgs_test_input[i],
                 img_pred=imgs_test_pred[i],
                 resmap=resmaps_test[i],
@@ -165,14 +165,17 @@ def main(
                 anomap_hc=anomaly_maps_hc[i],
                 filename=filenames_test[i],
             )
-            fig.savefig(
-                os.path.join(save_dir, "anomaly_localization", filenames_test[i])
-            )
+            fname = os.path.join(save_dir, "anomaly_localization", filenames_test[i])
+            os.makedirs(os.path.dirname(fname), exist_ok=True)
+            fig.savefig(fname)
+            plt.close(fig=fig)
 
 
 if __name__ == "__main__":
     # create parser
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Classify test images with Low & High Anomaly Detection Pipelines.",
+    )
     parser.add_argument(
         "-p", "--path", type=str, required=True, metavar="", help="path to saved model"
     )
@@ -196,10 +199,20 @@ if __name__ == "__main__":
         help="method used to compute resmaps",
     )
     parser.add_argument(
-        "-alc", "--min-area-lc", type=int, required=True, metavar="", help="min_area"
+        "-alc",
+        "--min-area-lc",
+        type=int,
+        required=True,
+        metavar="",
+        help="minimum area parameter for Low Contrast Anomaly Detection Pipeline",
     )
     parser.add_argument(
-        "-ahc", "--min-area-hc", type=int, required=True, metavar="", help="min_area"
+        "-ahc",
+        "--min-area-hc",
+        type=int,
+        required=True,
+        metavar="",
+        help="minimum area parameter for High Contrast Anomaly Detection Pipeline",
     )
     parser.add_argument(
         "-thc",
@@ -207,26 +220,27 @@ if __name__ == "__main__":
         type=float,
         required=True,
         metavar="",
-        help="classification threshold",
+        help="classification threshold for High Contrast Anomaly Detection Pipeline",
     )
     parser.add_argument(
         "-loc",
         "--localize",
-        action="store_false",
+        action="store_true",
         help="whether to generate and save anomaly localization figures for test images",
     )
 
     args = parser.parse_args()
 
     main(
-        args.path,
-        args.view,
-        args.method,
-        args.min_area_lc,
-        args.min_area_hc,
-        args.threshold_hc,
-        args.localize,
+        model_path=args.path,
+        view=args.view,
+        method=args.method,
+        min_area_lc=args.min_area_lc,
+        min_area_hc=args.min_area_hc,
+        threshold_hc=args.threshold_hc,
+        localize=args.localize,
     )
 
 # Examples of command to initiate testing
-# python3 test.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a00 -m l2 -alc 89 -ahc 50 -thc 0.2 -loc True
+# python3 test.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a00 -m l2 -alc 89 -ahc 50 -thc 0.2 -loc
+# python3 test.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a45 -m l2 -alc 67 -ahc 20 -thc 0.206 -loc

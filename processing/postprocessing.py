@@ -1,11 +1,7 @@
-import os
 import numpy as np
-from processing.resmaps import ResmapCalculator
-from processing.utils import printProgressBar, is_rgb
+from processing import resmaps
+from processing.utils import printProgressBar
 import matplotlib.pyplot as plt
-from skimage.segmentation import clear_border
-from skimage.measure import label, regionprops
-from skimage.morphology import closing, square
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -14,7 +10,13 @@ logger = logging.getLogger(__name__)
 
 class ResmapPlotter:
     def __init__(
-        self, imgs_input, imgs_pred, filenames, color_out="grayscale", vmin=0.0, vmax=1.0,
+        self,
+        imgs_input,
+        imgs_pred,
+        filenames,
+        color_out="grayscale",
+        vmin=0.0,
+        vmax=1.0,
     ):
         self.imgs_input = imgs_input
         self.imgs_pred = imgs_pred
@@ -22,8 +24,7 @@ class ResmapPlotter:
         self.vmin = vmin
         self.vmax = vmax
 
-
-        self.RC_ssim = ResmapCalculator(
+        self.RC_ssim = resmaps.ResmapCalculator(
             imgs_input=imgs_input,
             imgs_pred=imgs_pred,
             color_out=color_out,
@@ -31,10 +32,9 @@ class ResmapPlotter:
             filenames=filenames,
             vmin=vmin,
             vmax=vmax,
-            dtype="float64",
         )
 
-        self.RC_l1 = ResmapCalculator(
+        self.RC_l1 = resmaps.ResmapCalculator(
             imgs_input=imgs_input,
             imgs_pred=imgs_pred,
             color_out=color_out,
@@ -42,10 +42,9 @@ class ResmapPlotter:
             filenames=filenames,
             vmin=vmin,
             vmax=vmax,
-            dtype="float64",
         )
 
-        self.RC_l2 = ResmapCalculator(
+        self.RC_l2 = resmaps.ResmapCalculator(
             imgs_input=imgs_input,
             imgs_pred=imgs_pred,
             color_out=color_out,
@@ -53,7 +52,6 @@ class ResmapPlotter:
             filenames=filenames,
             vmin=vmin,
             vmax=vmax,
-            dtype="float64",
         )
 
     # Method for generating and plotting Resmaps for inspection
@@ -166,35 +164,3 @@ class ResmapPlotter:
                 axarr[i].legend()
         return fig
 
-
-## functions for processing resmaps
-
-
-def label_images(images_th):
-    images_labeled = np.zeros(shape=images_th.shape)
-    areas_all = []
-    for i, image_th in enumerate(images_th):
-        # close small holes with binary closing
-        # bw = closing(image_th, square(3))
-
-        # remove artifacts connected to image border
-        cleared = clear_border(image_th)
-
-        # label image regions
-        image_labeled = label(cleared)
-
-        # image_labeled = label(image_th)
-
-        # append image
-        images_labeled[i] = image_labeled
-
-        # compute areas of anomalous regions in the current image
-        regions = regionprops(image_labeled)
-
-        if regions:
-            areas = [region.area for region in regions]
-            areas_all.append(areas)
-        else:
-            areas_all.append([0])
-
-    return images_labeled, areas_all

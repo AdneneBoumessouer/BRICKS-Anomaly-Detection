@@ -1,13 +1,7 @@
 import numpy as np
-from processing.utils import get_indices
-from processing.resmaps import ResmapCalculator
 from processing.anomaly import AnomalyMap
 from processing.utils import printProgressBar
 from skimage import measure
-
-
-class AnomalyDetector:
-    pass
 
 
 class HighContrastAnomalyDetector:

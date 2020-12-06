@@ -1,13 +1,10 @@
 import os
 import argparse
 import json
-import numpy as np
-from skimage import measure
-from processing.preprocessing import Preprocessor
+from processing import preprocessing
 from processing import detection
 from processing import utils
-from processing.utils import printProgressBar
-from processing.resmaps import ResmapCalculator
+from processing import resmaps
 import config
 
 import logging
@@ -16,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def validate(model_path, view, method, min_area):
+def main(model_path, view, method, min_area_hc):
     # load model for inspection
     logger.info("loading model for inspection...")
     model, info, _ = utils.load_model_HDF5(model_path)
@@ -29,7 +26,7 @@ def validate(model_path, view, method, min_area):
     nb_validation_images = info["data"]["nb_validation_images"]
 
     # instantiate preprocessor object to preprocess validation and test inspection images
-    preprocessor = Preprocessor(
+    preprocessor = preprocessing.Preprocessor(
         input_directory=input_dir, rescale=rescale, shape=shape, color_mode=color_mode,
     )
 
@@ -45,7 +42,7 @@ def validate(model_path, view, method, min_area):
     imgs_val_pred = model.predict(imgs_val_input)
 
     # calculate resmaps
-    RC_val = ResmapCalculator(
+    RC_val = resmaps.ResmapCalculator(
         imgs_input=imgs_val_input,
         imgs_pred=imgs_val_pred,
         color_out="grayscale",
@@ -62,21 +59,21 @@ def validate(model_path, view, method, min_area):
 
     # fit detectors
     min_area_lc = detector_lc.fit(resmaps_val)
-    threshold_hc = detector_hc.fit(resmaps_val, min_area=min_area)
+    threshold_hc = detector_hc.fit(resmaps_val, min_area=min_area_hc)
 
     # save validation results
     validation_result = {
         "LowContrastAnomalyDetector": {"min_area_lc": min_area_lc},
         "HighContrastAnomalyDetector": {
-            "min_area_hc": min_area,
+            "min_area_hc": min_area_hc,
             "threshold_hc": threshold_hc,
         },
     }
 
     # save validation result
     save_dir = os.path.join(os.path.dirname(model_path), "validation", method, view)
-    if not (os.path.exists(save_dir) and os.path.isdir(save_dir)):
-        os.makedirs(save_dir)
+    os.makedirs(save_dir, exist_ok=True)
+
     with open(os.path.join(save_dir, "result_" + view + ".json"), "w") as json_file:
         json.dump(validation_result, json_file, indent=4, sort_keys=False)
     return
@@ -85,7 +82,7 @@ def validate(model_path, view, method, min_area):
 if __name__ == "__main__":
     # create parser
     parser = argparse.ArgumentParser(
-        description="Test model on some images for inspection.",
+        description="Estimate best classification threshold for High Contrast Anomaly Detection Pipeline given a minimum area.",
     )
     parser.add_argument(
         "-p", "--path", type=str, required=True, metavar="", help="path to saved model"
@@ -100,7 +97,12 @@ if __name__ == "__main__":
         help="view dataset to perform classification on",
     )
     parser.add_argument(
-        "-a", "--area", type=int, required=True, metavar="", help="min_area"
+        "-ahc",
+        "--min-area-hc",
+        type=int,
+        required=True,
+        metavar="",
+        help="minimum area parameter for High Contrast Anomaly Detection Pipeline",
     )
     parser.add_argument(
         "-m",
@@ -117,8 +119,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # run main function
-    validate(
-        model_path=args.path, view=args.view, method=args.method, min_area=args.area
+    main(
+        model_path=args.path,
+        view=args.view,
+        method=args.method,
+        min_area_hc=args.min_area_hc,
     )
 
-# python3 validate.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a00 -a 50 -m l2
+# python3 validate.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a00 -ahc 50 -m l2
+# python3 validate.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a45 -ahc 20 -m l2

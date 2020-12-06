@@ -67,22 +67,29 @@ def load_model_HDF5(model_path):
     return model, info, history
 
 
-def get_indices(generator, view, category=None):
-    if category is not None:
-        index_arr_cat = np.nonzero(
-            generator.classes == generator.class_indices[category]
-        )[0]
-        filenames_cat = [generator.filenames[i] for i in index_arr_cat]
-        filenames = [
-            filename
-            for filename in filenames_cat
-            if filename.split("/")[-1].split("_")[0] == view
-        ]
-        index_arr = [
-            index_arr_cat[i]
-            for i, filename in enumerate(filenames_cat)
-            if filename.split("/")[-1].split("_")[0] == view
-        ]
+def get_indices(generator, view, categories=[]):
+    if categories:
+        index_arr = []
+        filenames = []
+
+        for category in categories:
+            index_arr_cat = np.nonzero(
+                generator.classes == generator.class_indices[category]
+            )[0]
+            filenames_cat = [generator.filenames[i] for i in index_arr_cat]
+            filenames_cat_view = [
+                filename
+                for filename in filenames_cat
+                if filename.split("/")[-1].split("_")[0] == view
+            ]
+            index_arr_cat_view = [
+                index_arr_cat[i]
+                for i, filename in enumerate(filenames_cat)
+                if filename.split("/")[-1].split("_")[0] == view
+            ]
+
+            index_arr.extend(index_arr_cat_view)
+            filenames.extend(filenames_cat_view)
     else:
         filenames = [
             filename
