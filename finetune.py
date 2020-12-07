@@ -72,7 +72,7 @@ def main(model_path, view, method):
     )
 
     # test_generator.reset
-    categories = ["02_added", "03_missing", "04_shifted", "good"]
+    categories = ["02_added", "03_missing", "04_shifted", "10_stain", "good"]
     index_array_test, filenames_test = utils.get_indices(
         test_generator, view, categories
     )
@@ -125,7 +125,7 @@ def main(model_path, view, method):
             length=80,
         )
 
-        detector_hc = detection.HighContrastAnomalyDetector(vmin=0.2)
+        detector_hc = detection.HighContrastAnomalyDetector(vmin=0.30, vmax=1.0)
         threshold_hc = detector_hc.fit(resmaps_val, min_area=min_area_hc, verbose=0)
         y_pred_hc, _ = detector_hc.predict(resmaps_test)
         tnr, _, _, tpr = confusion_matrix(y_true, y_pred_hc, normalize="true").ravel()

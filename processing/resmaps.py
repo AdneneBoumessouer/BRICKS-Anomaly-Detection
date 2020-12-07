@@ -47,9 +47,7 @@ class ResmapCalculator:
         self.cmap_resmap = "inferno" if color_out == "grayscale" else None
 
         # compute resmaps
-        self.scores, self.resmaps = calculate_resmaps(
-            imgs_input, imgs_pred, color_out, method,
-        )
+        self.resmaps = calculate_resmaps(imgs_input, imgs_pred, color_out, method,)
 
         # set parameters for future segmentation of resmaps
         self.vmin_resmap = 0
@@ -57,9 +55,6 @@ class ResmapCalculator:
 
     def get_resmaps(self):
         return self.resmaps
-
-    def get_scores(self):
-        return self.scores
 
 
 # Functions to calculate Resmaps
@@ -76,14 +71,14 @@ def calculate_resmaps(imgs_input, imgs_pred, color_out, method):
 
     # calculate remaps
     if method == "ssim":
-        scores, resmaps = resmaps_ssim(imgs_input, imgs_pred)
+        resmaps = resmaps_ssim(imgs_input, imgs_pred)
     elif method == "l1":
-        scores, resmaps = resmaps_l1(imgs_input, imgs_pred)
+        resmaps = resmaps_l1(imgs_input, imgs_pred)
     elif method == "l2":
-        scores, resmaps = resmaps_l2(imgs_input, imgs_pred)
+        resmaps = resmaps_l2(imgs_input, imgs_pred)
     elif method == "combined":
-        scores, resmaps = resmaps_combined(imgs_input, imgs_pred)
-    return scores, resmaps
+        resmaps = resmaps_combined(imgs_input, imgs_pred)
+    return resmaps
 
 
 def resmaps_ssim(imgs_input, imgs_pred):
@@ -111,25 +106,25 @@ def resmaps_ssim(imgs_input, imgs_pred):
         resmaps[index] = 1 - resmap
         scores.append(score)
     resmaps = np.clip(resmaps, a_min=-1, a_max=1)
-    scores = np.array(scores)
-    return scores, resmaps
+    # scores = np.array(scores)
+    return resmaps
 
 
 def resmaps_l1(imgs_input, imgs_pred):
     resmaps = np.abs(imgs_input - imgs_pred)
-    scores = np.sum(resmaps, axis=0).flatten()
-    return scores, resmaps
+    resmaps[resmaps < 0.02] = 0.0  # 0.05
+    return resmaps
 
 
 def resmaps_l2(imgs_input, imgs_pred):
-    resmaps = (imgs_input - imgs_pred) ** 2
-    scores = np.sum(resmaps, axis=0).flatten()
-    return scores, resmaps
+    resmaps = 2 * resmaps_l1(imgs_input, imgs_pred) ** 2
+    resmaps = np.clip(resmaps, a_min=0.0, a_max=1.0)
+    return resmaps
 
 
 def resmaps_combined(imgs_input, imgs_pred):
-    resmaps = 0.7 * resmaps_ssim(imgs_input, imgs_pred) + 1.0 * resmaps_l1(
+    resmaps = 0.5 * resmaps_ssim(imgs_input, imgs_pred) ** 2 + resmaps_l2(
         imgs_input, imgs_pred
     )
-    scores = np.sum(resmaps, axis=0).flatten()
-    return scores, resmaps
+    resmaps = np.clip(resmaps, a_min=0.0, a_max=1.0)
+    return resmaps

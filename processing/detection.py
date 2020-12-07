@@ -5,14 +5,14 @@ from skimage import measure
 
 
 class HighContrastAnomalyDetector:
-    def __init__(self, vmin=0.18, vmax=1.0, vstep=2e-3):
+    def __init__(self, vmin=0.35, vmax=1.0, vstep=2e-3):
         self.vmin = vmin
         self.vmax = vmax
         self.vstep = vstep
 
     def fit(self, resmaps_val, min_area, verbose=1):
         self.min_area = min_area
-        ths = np.arange(self.vmin, self.vmax, self.vstep, dtype="float")
+        ths = np.arange(self.vmin, self.vmax + self.vstep, self.vstep, dtype="float")
         printProgressBar(0, len(ths), length=80, verbose=verbose)
         for i, th in enumerate(ths):
             imgs_binary = resmaps_val > th
@@ -24,10 +24,13 @@ class HighContrastAnomalyDetector:
                     for regionprop in measure.regionprops(labeled)
                 ]
             )
-            largest_area = np.amax(areas)
-            if largest_area < min_area:
+            if areas.size > 0:
+                largest_area = np.amax(areas)
+                if largest_area < min_area:
+                    self.threshold = th
+                    break
+            else:
                 self.threshold = th
-                break
             printProgressBar(i + 1, len(ths), length=80, verbose=verbose)
 
         printProgressBar(len(ths), len(ths), length=80, verbose=verbose)
@@ -69,14 +72,14 @@ class HighContrastAnomalyDetector:
 
 
 class LowContrastAnomalyDetector:
-    def __init__(self, vmin=0.05, vmax=0.18, vstep=2e-3):
+    def __init__(self, vmin=0.1, vmax=0.35, vstep=2e-3):
         self.vmin = vmin
         self.vmax = vmax
         self.vstep = vstep
 
     def fit(self, resmaps_val):
         # threshold resmaps
-        imgs_binary = (self.vmin < resmaps_val) & (resmaps_val < self.vmax)
+        imgs_binary = (self.vmin < resmaps_val) & (resmaps_val <= self.vmax)
         # label resmaps (extract connected componenets)
         imgs_labeled = [measure.label(binary) for binary in imgs_binary]
         largest_areas = [

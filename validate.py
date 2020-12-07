@@ -54,8 +54,8 @@ def main(model_path, view, method, min_area_hc):
     resmaps_val = RC_val.get_resmaps()
 
     # instantiate detectors
-    detector_lc = detection.LowContrastAnomalyDetector(vmax=0.2)
-    detector_hc = detection.HighContrastAnomalyDetector(vmin=0.2)
+    detector_lc = detection.LowContrastAnomalyDetector(vmin=0.1, vmax=0.30)
+    detector_hc = detection.HighContrastAnomalyDetector(vmin=0.30, vmax=1.0)
 
     # fit detectors
     min_area_lc = detector_lc.fit(resmaps_val)
@@ -69,6 +69,7 @@ def main(model_path, view, method, min_area_hc):
             "threshold_hc": threshold_hc,
         },
     }
+    print(validation_result)
 
     # save validation result
     save_dir = os.path.join(os.path.dirname(model_path), "validation", method, view)
