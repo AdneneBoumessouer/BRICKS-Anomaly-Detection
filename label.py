@@ -17,9 +17,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def generate_labeled_imgs(
-    resmap, filename, min_area=20, min_area_plot=5, save_dir=None
-):
+def generate_labeled_imgs(resmap, filename, min_area_plot=5, save_dir=None):
     """
     Generates labeled images for increasing thresholds cooresponding
     to a given resmap containing bboxes for regions which areas are bigger
@@ -30,7 +28,7 @@ def generate_labeled_imgs(
     """
     # initialize thresholds
     th_min = 0.2
-    th_step = 5e-3
+    th_step = 2e-3
     th_max = np.amax(resmap) + th_step
     ths = np.arange(start=th_min, stop=th_max, step=th_step, dtype="float")
 
@@ -44,17 +42,15 @@ def generate_labeled_imgs(
         regionprops = measure.regionprops(labeled)
         regionprops.sort(key=lambda x: x.area, reverse=True)
 
-        list_area_bbox = [
-            (regionprop.area, regionprop.bbox) for regionprop in regionprops
-        ]
+        props = [(regionprop.area, regionprop.bbox) for regionprop in regionprops]
 
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 10))
         resmap_overlay = color.label2rgb(
             labeled, resmap, alpha=0.5, bg_label=0, image_alpha=1, kind="overlay"
         )
         ax.imshow(resmap_overlay)
-        if list_area_bbox:
-            for area, bbox in list_area_bbox:
+        if props:
+            for area, bbox in props:
                 if area > min_area_plot:
                     # edgecolor = "red" if area >= min_area else "yellow"
                     minr, minc, maxr, maxc = bbox
@@ -140,7 +136,6 @@ def main(model_path, method, subset, view):
         filenames=filenames,
         vmin=vmin,
         vmax=vmax,
-        dtype="float64",
     )
     resmaps = RC_val.get_resmaps()
 
@@ -152,9 +147,7 @@ def main(model_path, method, subset, view):
         if not (os.path.exists(save_dir) and os.path.isdir(save_dir)):
             os.makedirs(save_dir)
         # generate and save labeled resmaps for increasing thresholds
-        generate_labeled_imgs(
-            resmap, filename, min_area=25, min_area_plot=5, save_dir=save_dir
-        )
+        generate_labeled_imgs(resmap, filename, min_area_plot=5, save_dir=save_dir)
     return
 
 
@@ -204,4 +197,4 @@ if __name__ == "__main__":
     main(model_path=args.path, method=args.method, subset=args.subset, view=args.view)
 
 
-# python3 label.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 --method l1 --subset val --view a00
+# python3 label.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 --method l2 --subset val --view a00

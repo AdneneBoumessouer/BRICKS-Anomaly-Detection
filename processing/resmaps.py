@@ -16,24 +16,22 @@ class ResmapCalculator:
         self,
         imgs_input,
         imgs_pred,
-        color_out,
         method,
-        filenames=None,
+        color_out="grayscale",
+        filenames=None,  # TODO remove
         vmin=0.0,
         vmax=1.0,
-        dtype="float64",  # TODO remove support for uint8 and continue only with float64
     ):
         assert imgs_input.ndim == imgs_pred.ndim == 4
         assert method in ["l1", "l2", "ssim", "combined"]
         assert color_out in ["grayscale", "rgb"]
-        assert dtype in ["float64", "uint8"]
 
-        if color_out == "rgb" and not(is_rgb(imgs_input)):
+        if color_out == "rgb" and not (is_rgb(imgs_input)):
             raise ValueError("color is rgb but images are grayscale")
 
         self.color_out = color_out
         self.method = method
-        self.dtype = dtype
+
         self.filenames = filenames
 
         # min and max pixel values of input and reconstruction (pred).
@@ -50,7 +48,7 @@ class ResmapCalculator:
 
         # compute resmaps
         self.scores, self.resmaps = calculate_resmaps(
-            imgs_input, imgs_pred, color_out, method, dtype
+            imgs_input, imgs_pred, color_out, method,
         )
 
         # set parameters for future segmentation of resmaps
@@ -67,9 +65,7 @@ class ResmapCalculator:
 # Functions to calculate Resmaps
 
 
-def calculate_resmaps(
-    imgs_input, imgs_pred, color_out, method, dtype="float64"
-):
+def calculate_resmaps(imgs_input, imgs_pred, color_out, method):
     """
     To calculate resmaps, input tensors must be grayscale and of shape (samples x length x width).
     """
@@ -87,9 +83,6 @@ def calculate_resmaps(
         scores, resmaps = resmaps_l2(imgs_input, imgs_pred)
     elif method == "combined":
         scores, resmaps = resmaps_combined(imgs_input, imgs_pred)
-    # change dtype to unsigned integer
-    if dtype == "uint8":
-        resmaps = img_as_ubyte(resmaps)
     return scores, resmaps
 
 
@@ -135,7 +128,8 @@ def resmaps_l2(imgs_input, imgs_pred):
 
 
 def resmaps_combined(imgs_input, imgs_pred):
-    resmaps = 0.7*resmaps_ssim(imgs_input, imgs_pred) + \
-        1.0*resmaps_l1(imgs_input, imgs_pred)
+    resmaps = 0.7 * resmaps_ssim(imgs_input, imgs_pred) + 1.0 * resmaps_l1(
+        imgs_input, imgs_pred
+    )
     scores = np.sum(resmaps, axis=0).flatten()
     return scores, resmaps

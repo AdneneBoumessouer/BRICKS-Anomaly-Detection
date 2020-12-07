@@ -4,49 +4,22 @@ import json
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from processing.preprocessing import Preprocessor
-from processing.resmaps import ResmapCalculator
+from processing import preprocessing
+from processing import resmaps
+from processing import detection
 from processing import utils
-from processing.utils import printProgressBar
-from skimage import measure
+from processing import anomaly
 from sklearn.metrics import confusion_matrix
+from processing.utils import printProgressBar
 import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def predict_classes(resmaps_test, min_area, th):
-    # 0 for defect-free, 1 for defective
-    imgs_binary = resmaps_test > th
-    imgs_labeled = np.array([measure.label(binary) for binary in imgs_binary])
-    predictions = []
-    for labeled in imgs_labeled:
-        pred = 0
-        for regionprop in measure.regionprops(labeled):
-            if regionprop.area > min_area:
-                pred = 1
-                break
-        predictions.append(pred)
-    return predictions
-
-
-# def save_segmented_images(resmaps, threshold, filenames, save_dir):
-#     # threshold residual maps with the given threshold
-#     resmaps_th = resmaps > threshold
-#     # create directory to save segmented resmaps
-#     seg_dir = os.path.join(save_dir, "segmentation")
-#     if not os.path.isdir(seg_dir):
-#         os.makedirs(seg_dir)
-#     # save segmented resmaps
-#     for i, resmap_th in enumerate(resmaps_th):
-#         fname = utils.generate_new_name(filenames[i], suffix="seg")
-#         fpath = os.path.join(seg_dir, fname)
-#         plt.imsave(fpath, resmap_th, cmap="gray")
-#     return
-
-
-def main(model_path, view, method, min_area, th):
+def main(
+    model_path, view, method, min_area_lc, min_area_hc, threshold_hc, localize=False
+):
     # load model and info
     model, info, _ = utils.load_model_HDF5(model_path)
     input_dir = info["data"]["input_directory"]
@@ -57,7 +30,7 @@ def main(model_path, view, method, min_area, th):
     vmax = info["preprocessing"]["vmax"]
 
     # initialize preprocessor
-    preprocessor = Preprocessor(
+    preprocessor = preprocessing.Preprocessor(
         input_directory=input_dir, rescale=rescale, shape=shape, color_mode=color_mode,
     )
 
@@ -67,88 +40,142 @@ def main(model_path, view, method, min_area, th):
         batch_size=nb_test_images, shuffle=False
     )
 
-    # views = ["a00", "a45"]
-    # for view, min_area, th in list(zip(views, min_areas, ths)):
     # retrieve test images
-    filenames = [
-        filename
-        for filename in test_generator.filenames
-        if filename.split("/")[-1].split("_")[0] == view
-    ]
-    index_array = [
-        i
-        for i, filename in enumerate(test_generator.filenames)
-        if filename.split("/")[-1].split("_")[0] == view
-    ]
+    index_array, filenames_test = utils.get_indices(test_generator, view)
+    categories = [filename.split("/")[0] for filename in filenames_test]
     imgs_test_input = test_generator._get_batches_of_transformed_samples(index_array)[0]
 
     # reconstruct validation inspection images (i.e predict)
     imgs_test_pred = model.predict(imgs_test_input)
 
     # calculate resmaps
-    RC_test = ResmapCalculator(
+    RC_test = resmaps.ResmapCalculator(
         imgs_input=imgs_test_input,
         imgs_pred=imgs_test_pred,
         color_out="grayscale",
         method=method,
-        filenames=filenames,
+        filenames=filenames_test,
         vmin=vmin,
         vmax=vmax,
-        dtype="float64",
     )
     resmaps_test = RC_test.get_resmaps()
 
-    # retrieve ground truth
-    y_true = [0 if "good" in filename.split("/") else 1 for filename in filenames]
+    # instantiate detectors
+    detector_lc = detection.LowContrastAnomalyDetector(vmax=0.2)
+    detector_hc = detection.HighContrastAnomalyDetector(vmin=0.2)
 
-    # predict classes on test images
-    y_pred = predict_classes(resmaps_test=resmaps_test, min_area=min_area, th=th)
+    # set estimated detector parameters from validation
+    detector_lc.set_min_area(min_area_lc)
+    detector_hc.set_min_area(min_area_hc)
+    detector_hc.set_threshold(threshold_hc)
+
+    # predict
+    y_pred_lc, anomaly_maps_lc = detector_lc.predict(resmaps_test)
+    y_pred_hc, anomaly_maps_hc = detector_hc.predict(resmaps_test)
+    y_pred = list(np.array(y_pred_lc) | np.array(y_pred_hc))
+
+    # retrieve ground truth
+    y_true = [0 if "good" in filename.split("/") else 1 for filename in filenames_test]
 
     # confusion matrix
-    tnr, fp, fn, tpr = confusion_matrix(y_true, y_pred, normalize="true").ravel()
+    tnr, _, _, tpr = confusion_matrix(y_true, y_pred, normalize="true").ravel()
 
-    # initialize dictionary to store test results
-    test_result = {
+    # create directory to save test results and classification stats
+    save_dir = os.path.join(os.path.dirname(model_path), "test", method, view)
+    os.makedirs(save_dir, exist_ok=True)
+
+    # save test params
+    test_params = {
         "method": method,
-        "min_area": min_area,
-        "threshold": th,
-        "TPR": tpr,
-        "TNR": tnr,
-        "score": (tpr + tnr) / 2,
+        "LowContrastAnomalyDetector": {
+            "min_area": min_area_lc,
+            # "threshold": threshold_lc,
+        },
+        "HighContrastAnomalyDetector": {
+            "min_area": min_area_hc,
+            "threshold": threshold_hc,
+        },
+        # "TPR": float(tpr),
+        # "TNR": float(tnr),
+        # "score": 0.7 * float(tpr) + 0.3 * float(tnr),
     }
+    with open(os.path.join(save_dir, "test_params.json"), "w") as json_file:
+        json.dump(test_params, json_file, indent=4, sort_keys=False)
 
-    # create directory to save test results
-    save_dir = os.path.join(os.path.dirname(model_path), "test", view)
-    if not (os.path.exists(save_dir) and os.path.isdir(save_dir)):
-        os.makedirs(save_dir)
-
-    # save test result
-    with open(os.path.join(save_dir, "result_" + view + ".json"), "w") as json_file:
-        json.dump(test_result, json_file, indent=4, sort_keys=False)
-
-    # save classification of image files in a .txt file
+    # save classification of test images
     classification = {
-        "filenames": filenames,
-        "predictions": y_pred,
-        "truth": y_true,
-        "accurate_predictions": np.array(y_true) == np.array(y_pred),
+        "category": categories,
+        "filename": filenames_test,
+        "y_pred_lc": y_pred_lc,
+        "y_pred_hc": y_pred_hc,
+        "y_pred": y_pred,
+        "y_true": y_true,
+        "accurate_prediction": np.array(y_true) == np.array(y_pred),
     }
-    df_clf = pd.DataFrame.from_dict(classification)
 
-    with open(os.path.join(save_dir, "classification_" + view + ".txt"), "w") as f:
+    df_clf = pd.DataFrame.from_dict(classification)
+    df_clf.to_pickle(os.path.join(save_dir, "df_clf.pkl"))
+    with open(os.path.join(save_dir, "classification.txt"), "w") as f:
         f.write(df_clf.to_string(header=True, index=True))
 
-    # print classification results to console
-    with pd.option_context("display.max_rows", None, "display.max_columns", None):
-        print(df_clf)
+    # get and save classification stats
+    df_stats_cb = utils.get_stats(df_clf, detector_type="cb")
+    df_stats_lc = utils.get_stats(df_clf, detector_type="lc")
+    df_stats_hc = utils.get_stats(df_clf, detector_type="hc")
 
-    # print test_results to console
-    logger.info(view + " test results: {}\n\n".format(test_result))
+    os.makedirs(os.path.join(save_dir, "stats"), exist_ok=True)
+
+    df_stats_cb.to_pickle(os.path.join(save_dir, "stats", "df_stats_cb.pkl"))
+    df_stats_lc.to_pickle(os.path.join(save_dir, "stats", "df_stats_lc.pkl"))
+    df_stats_hc.to_pickle(os.path.join(save_dir, "stats", "df_stats_hc.pkl"))
+
+    with open(os.path.join(save_dir, "stats", "df_stats_cb.txt"), "w") as f:
+        f.write(df_stats_cb.to_string(header=True, index=True))
+
+    with open(os.path.join(save_dir, "stats", "df_stats_lc.txt"), "w") as f:
+        f.write(df_stats_lc.to_string(header=True, index=True))
+
+    with open(os.path.join(save_dir, "stats", "df_stats_hc.txt"), "w") as f:
+        f.write(df_stats_hc.to_string(header=True, index=True))
+
+    # print classification stats to console
+    with pd.option_context("display.max_rows", None, "display.max_columns", None):
+        print(df_stats_cb)
+
+    # print test params to console
+    logger.info("\ntest_params: {}\n\n".format(test_params))
+
+    # generate and save anomaly figure
+    if localize:
+        n = len(imgs_test_input)
+        printProgressBar(0, n, prefix="Progress:", suffix="Complete", length=80)
+        for i in range(n):
+            printProgressBar(
+                iteration=i + 1,
+                total=n,
+                prefix="Progress:",
+                suffix="Complete | {}".format(filenames_test[i]),
+                length=80,
+            )
+            fig = anomaly.generate_anomaly_localization_figure(
+                img_input=imgs_test_input[i],
+                img_pred=imgs_test_pred[i],
+                resmap=resmaps_test[i],
+                anomap_lc=anomaly_maps_lc[i],
+                anomap_hc=anomaly_maps_hc[i],
+                filename=filenames_test[i],
+            )
+            fname = os.path.join(save_dir, "anomaly_localization", filenames_test[i])
+            os.makedirs(os.path.dirname(fname), exist_ok=True)
+            fig.savefig(fname)
+            plt.close(fig=fig)
 
 
 if __name__ == "__main__":
     # create parser
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Classify test images with Low & High Anomaly Detection Pipelines.",
+    )
     parser.add_argument(
         "-p", "--path", type=str, required=True, metavar="", help="path to saved model"
     )
@@ -172,23 +199,48 @@ if __name__ == "__main__":
         help="method used to compute resmaps",
     )
     parser.add_argument(
-        "-a", "--area", type=int, required=True, metavar="", help="min_area"
+        "-alc",
+        "--min-area-lc",
+        type=int,
+        required=True,
+        metavar="",
+        help="minimum area parameter for Low Contrast Anomaly Detection Pipeline",
     )
     parser.add_argument(
-        "-t",
-        "--threshold",
+        "-ahc",
+        "--min-area-hc",
+        type=int,
+        required=True,
+        metavar="",
+        help="minimum area parameter for High Contrast Anomaly Detection Pipeline",
+    )
+    parser.add_argument(
+        "-thc",
+        "--threshold_hc",
         type=float,
         required=True,
         metavar="",
-        help="classification threshold",
+        help="classification threshold for High Contrast Anomaly Detection Pipeline",
     )
-    # parser.add_argument(
-    #     "-s", "--save", action="store_true", help="save segmented images",
-    # )
+    parser.add_argument(
+        "-loc",
+        "--localize",
+        action="store_true",
+        help="whether to generate and save anomaly localization figures for test images",
+    )
 
     args = parser.parse_args()
 
-    main(args.path, args.view, args.method, args.area, args.threshold)
+    main(
+        model_path=args.path,
+        view=args.view,
+        method=args.method,
+        min_area_lc=args.min_area_lc,
+        min_area_hc=args.min_area_hc,
+        threshold_hc=args.threshold_hc,
+        localize=args.localize,
+    )
 
 # Examples of command to initiate testing
-# python3 test.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 --view a00 --method l1 --area 25 --threshold 0.5950
+# python3 test.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a00 -m l2 -alc 89 -ahc 50 -thc 0.2 -loc
+# python3 test.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a45 -m l2 -alc 67 -ahc 20 -thc 0.206 -loc

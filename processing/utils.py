@@ -67,15 +67,41 @@ def load_model_HDF5(model_path):
     return model, info, history
 
 
-def list_imgs(dirName):
-    listOfFiles = list()
-    for (dirpath, dirnames, filenames) in os.walk(dirName):
-        listOfFiles += [
-            os.path.join(dirpath, filename)
-            for filename in filenames
-            if filename.lower().endswith((".png", ".jpg", ".jpeg", ".tiff", ".bmp"))
+def get_indices(generator, view, categories=[]):
+    if categories:
+        index_arr = []
+        filenames = []
+
+        for category in categories:
+            index_arr_cat = np.nonzero(
+                generator.classes == generator.class_indices[category]
+            )[0]
+            filenames_cat = [generator.filenames[i] for i in index_arr_cat]
+            filenames_cat_view = [
+                filename
+                for filename in filenames_cat
+                if filename.split("/")[-1].split("_")[0] == view
+            ]
+            index_arr_cat_view = [
+                index_arr_cat[i]
+                for i, filename in enumerate(filenames_cat)
+                if filename.split("/")[-1].split("_")[0] == view
+            ]
+
+            index_arr.extend(index_arr_cat_view)
+            filenames.extend(filenames_cat_view)
+    else:
+        filenames = [
+            filename
+            for filename in generator.filenames
+            if filename.split("/")[-1].split("_")[0] == view
         ]
-    return listOfFiles
+        index_arr = [
+            i
+            for i, filename in enumerate(generator.filenames)
+            if filename.split("/")[-1].split("_")[0] == view
+        ]
+    return index_arr, filenames
 
 
 def printProgressBar(
@@ -127,4 +153,56 @@ def save_dataframe_as_text_file(df, save_dir, filename):
     with open(os.path.join(save_dir, filename), "w+") as f:
         f.write(df.to_string(header=True, index=True))
         print("[INFO] validation_results.txt saved at {}".format(save_dir))
+
+
+def list_imgs(dirName):
+    listOfFiles = list()
+    for (dirpath, dirnames, filenames) in os.walk(dirName):
+        listOfFiles += [
+            os.path.join(dirpath, filename)
+            for filename in filenames
+            if filename.lower().endswith((".png", ".jpg", ".jpeg", ".tiff", ".bmp"))
+        ]
+    return listOfFiles
+
+
+def get_stats(df_clf, detector_type="cb"):
+    if detector_type == "cb":
+        y_pred = "y_pred"
+    elif detector_type == "lc":
+        y_pred = "y_pred_lc"
+    else:
+        y_pred = "y_pred_hc"
+
+    categories = sorted(list(set(df_clf["category"].values)))
+    TPR = []
+    TNR = []
+
+    # stats per category
+    for category in categories:
+        df_clf_cat = df_clf[df_clf["category"] == category]
+        accuracy = np.count_nonzero(df_clf_cat[y_pred] == df_clf_cat["y_true"]) / len(
+            df_clf_cat
+        )
+        if category == "good":
+            TNR.append(accuracy)
+            TPR.append(None)
+        else:
+            TNR.append(None)
+            TPR.append(accuracy)
+
+    # stats overall
+    categories.append("overall")
+    df_clf_good = df_clf[df_clf["category"] == "good"]
+    tnr_total = np.count_nonzero(df_clf_good[y_pred] == df_clf_good["y_true"]) / len(
+        df_clf_good
+    )
+    TNR.append(tnr_total)
+    df_clf_defect = df_clf[df_clf["category"] != "good"]
+    tpr_total = np.count_nonzero(
+        df_clf_defect[y_pred] == df_clf_defect["y_true"]
+    ) / len(df_clf_defect)
+    TPR.append(tpr_total)
+    df_stats = pd.DataFrame.from_dict({"category": categories, "TPR": TPR, "TNR": TNR})
+    return df_stats
 
