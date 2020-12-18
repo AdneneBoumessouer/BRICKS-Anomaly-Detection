@@ -58,8 +58,8 @@ def main(model_path, view, method, min_area_hc):
     detector_hc = detection.HighContrastAnomalyDetector(vmin=0.30, vmax=1.0)
 
     # fit detectors
-    min_area_lc = detector_lc.fit(resmaps_val)
-    threshold_hc = detector_hc.fit(resmaps_val, min_area=min_area_hc)
+    min_area_lc = detector_lc.estimate_area(resmaps_val)
+    threshold_hc = detector_hc.estimate_threshold(resmaps_val, min_area=min_area_hc)
 
     # save validation results
     validation_result = {

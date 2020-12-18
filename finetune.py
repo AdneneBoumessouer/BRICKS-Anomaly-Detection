@@ -126,7 +126,9 @@ def main(model_path, view, method):
         )
 
         detector_hc = detection.HighContrastAnomalyDetector(vmin=0.30, vmax=1.0)
-        threshold_hc = detector_hc.fit(resmaps_val, min_area=min_area_hc, verbose=0)
+        threshold_hc = detector_hc.estimate_threshold(
+            resmaps_val, min_area=min_area_hc, verbose=0
+        )
         y_pred_hc, _ = detector_hc.predict(resmaps_test)
         tnr, _, _, tpr = confusion_matrix(y_true, y_pred_hc, normalize="true").ravel()
 

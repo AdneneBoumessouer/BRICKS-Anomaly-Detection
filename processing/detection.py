@@ -10,7 +10,7 @@ class HighContrastAnomalyDetector:
         self.vmax = vmax
         self.vstep = vstep
 
-    def fit(self, resmaps_val, min_area, verbose=1):
+    def estimate_threshold(self, resmaps_val, min_area, verbose=1):
         self.min_area = min_area
         ths = np.arange(self.vmin, self.vmax + self.vstep, self.vstep, dtype="float")
         printProgressBar(0, len(ths), length=80, verbose=verbose)
@@ -77,7 +77,7 @@ class LowContrastAnomalyDetector:
         self.vmax = vmax
         self.vstep = vstep
 
-    def fit(self, resmaps_val):
+    def estimate_area(self, resmaps_val):
         # threshold resmaps
         imgs_binary = (self.vmin < resmaps_val) & (resmaps_val <= self.vmax)
         # label resmaps (extract connected componenets)
