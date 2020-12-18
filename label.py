@@ -17,7 +17,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def generate_labeled_imgs(resmap, filename, min_area_plot=5, save_dir=None):
+def generate_labeled_imgs(
+    resmap, filename, min_area_plot=5, alpha_bg=0.3, save_dir=None
+):
     """
     Generates labeled images for increasing thresholds cooresponding
     to a given resmap containing bboxes for regions which areas are bigger
@@ -27,7 +29,7 @@ def generate_labeled_imgs(resmap, filename, min_area_plot=5, save_dir=None):
     for estimating threshold.
     """
     # initialize thresholds
-    th_min = 0.2
+    th_min = 0.1
     th_step = 2e-3
     th_max = np.amax(resmap) + th_step
     ths = np.arange(start=th_min, stop=th_max, step=th_step, dtype="float")
@@ -45,10 +47,16 @@ def generate_labeled_imgs(resmap, filename, min_area_plot=5, save_dir=None):
         props = [(regionprop.area, regionprop.bbox) for regionprop in regionprops]
 
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 10))
-        resmap_overlay = color.label2rgb(
-            labeled, resmap, alpha=0.5, bg_label=0, image_alpha=1, kind="overlay"
-        )
-        ax.imshow(resmap_overlay)
+        # transform labeled image to rgb image
+        labeled_rgb = color.label2rgb(labeled, bg_label=0, bg_color=None)
+        # add alpha channel to rgb labeled image
+        h, w = labeled.shape
+        labeled_alpha = np.ones(shape=(h, w, 4), dtype=labeled_rgb.dtype)
+        labeled_alpha[:, :, :3] = labeled_rgb
+        labeled_alpha[:, :, -1][labeled == 0] = alpha_bg
+
+        ax.imshow(resmap, vmin=0.0, vmax=1.0, cmap="inferno")
+        ax.imshow(labeled_alpha, alpha=0.5)
         if props:
             for area, bbox in props:
                 if area > min_area_plot:

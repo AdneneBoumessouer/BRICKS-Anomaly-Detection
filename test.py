@@ -61,8 +61,8 @@ def main(
     resmaps_test = RC_test.get_resmaps()
 
     # instantiate detectors
-    detector_lc = detection.LowContrastAnomalyDetector(vmax=0.2)
-    detector_hc = detection.HighContrastAnomalyDetector(vmin=0.2)
+    detector_lc = detection.LowContrastAnomalyDetector(vmin=0.1, vmax=0.30)
+    detector_hc = detection.HighContrastAnomalyDetector(vmin=0.30, vmax=1.0)
 
     # set estimated detector parameters from validation
     detector_lc.set_min_area(min_area_lc)
