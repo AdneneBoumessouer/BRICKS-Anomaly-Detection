@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 from matplotlib import cm
 import matplotlib.patches as mpatches
 from skimage import measure
+from skimage import morphology
 from skimage import color
 from processing.preprocessing import Preprocessor
 from processing.resmaps import ResmapCalculator
@@ -29,8 +30,8 @@ def generate_labeled_imgs(
     for estimating threshold.
     """
     # initialize thresholds
-    th_min = 0.1 # np.amin(resmap) + th_step
-    th_step = 2e-3
+    th_step = 1e-3  # 2e-3
+    th_min = np.amin(resmap) + th_step  # 0.1
     th_max = np.amax(resmap) + th_step
     ths = np.arange(start=th_min, stop=th_max, step=th_step, dtype="float")
 
@@ -40,7 +41,10 @@ def generate_labeled_imgs(
     # label resmaps with increasing thresholds
     for i, th in enumerate(ths):
         binary = resmap > th
-        labeled = measure.label(binary)
+        # binary opening
+        binary = morphology.binary_opening(binary, selem=morphology.square(3))  # 5
+        # label regions
+        labeled = measure.label(binary, connectivity=2)
         regionprops = measure.regionprops(labeled)
         regionprops.sort(key=lambda x: x.area, reverse=True)
 
@@ -139,7 +143,7 @@ def main(model_path, method, subset, view):
     RC_val = ResmapCalculator(
         imgs_input=imgs_input,
         imgs_pred=imgs_pred,
-        color_out="grayscale",
+        color_out="rgb",  # grayscale
         method=method,
         filenames=filenames,
         vmin=vmin,
@@ -150,9 +154,15 @@ def main(model_path, method, subset, view):
     for resmap, filename in list(zip(resmaps, filenames)):
         # create save dir
         save_dir = os.path.join(
-            os.path.dirname(model_path), "labeling", method, subset, view, filename
+            os.path.dirname(model_path),
+            "labeling",
+            method,
+            "connectivity_2",
+            subset,
+            view,
+            filename,
         )
-        os.makedirs(save_dir, exist_ok=True))
+        os.makedirs(save_dir, exist_ok=True)
         # generate and save labeled resmaps for increasing thresholds
         generate_labeled_imgs(resmap, filename, min_area_plot=5, save_dir=save_dir)
     return
@@ -173,7 +183,7 @@ if __name__ == "__main__":
         type=str,
         required=False,
         metavar="",
-        choices=["ssim", "l1", "l2", "combined"],
+        choices=["ssim", "l1", "l2", "combined", "hsv"],
         default="l1",
         help="method used to compute resmaps",
     )
@@ -204,4 +214,5 @@ if __name__ == "__main__":
     main(model_path=args.path, method=args.method, subset=args.subset, view=args.view)
 
 
-# python3 label.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 --method l2 --subset val --view a00
+# python3 label.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 --method hsv --subset val --view a00
+# python3 label.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 --method hsv --subset test --view a00

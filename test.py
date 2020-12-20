@@ -50,7 +50,7 @@ def main(model_path, view, method, min_area_lc, min_area_hc, threshold, localize
     RC_test = resmaps.ResmapCalculator(
         imgs_input=imgs_test_input,
         imgs_pred=imgs_test_pred,
-        color_out="grayscale",
+        color_out="rgb",  # "grayscale"
         method=method,
         filenames=filenames_test,
         vmin=vmin,
@@ -193,7 +193,7 @@ if __name__ == "__main__":
         type=str,
         required=False,
         metavar="",
-        choices=["ssim", "l1", "l2", "combined"],
+        choices=["ssim", "l1", "l2", "combined", "hsv"],
         default="l1",
         help="method used to compute resmaps",
     )
@@ -241,5 +241,5 @@ if __name__ == "__main__":
     )
 
 # Examples of command to initiate testing
-# python3 test.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a00 -m l2 -alc 89 -ahc 50 -th 0.2 -loc
-# python3 test.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a45 -m l2 -alc 67 -ahc 20 -th 0.206 -loc
+# python3 test.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a00 -m hsv -alc 89 -ahc 50 -th 0.2 -loc
+# python3 test.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a45 -m hsv -alc 62 -ahc 30 -th 0.201 -loc

@@ -45,7 +45,7 @@ def main(model_path, view, method, min_area_hc):
     RC_val = resmaps.ResmapCalculator(
         imgs_input=imgs_val_input,
         imgs_pred=imgs_val_pred,
-        color_out="grayscale",
+        color_out="rgb",  # "grayscale",
         method=method,
         filenames=filenames,
         vmin=vmin,
@@ -114,7 +114,7 @@ if __name__ == "__main__":
         type=str,
         required=False,
         metavar="",
-        choices=["ssim", "l1", "l2", "combined"],
+        choices=["ssim", "l1", "l2", "combined", "hsv"],
         default="l1",
         help="method used to compute resmaps",
     )
@@ -130,5 +130,5 @@ if __name__ == "__main__":
         min_area_hc=args.min_area_hc,
     )
 
-# python3 validate.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a00 -ahc 50 -m l2
-# python3 validate.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a45 -ahc 20 -m l2
+# python3 validate.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a00 -ahc 50 -m hsv
+# python3 validate.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a45 -ahc 30 -m hsv

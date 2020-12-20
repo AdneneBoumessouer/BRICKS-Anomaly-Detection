@@ -23,7 +23,7 @@ class ResmapCalculator:
         vmax=1.0,
     ):
         assert imgs_input.ndim == imgs_pred.ndim == 4
-        assert method in ["l1", "l2", "ssim", "combined"]
+        assert method in ["l1", "l2", "ssim", "combined", "hsv"]
         assert color_out in ["grayscale", "rgb"]
 
         if color_out == "rgb" and not (is_rgb(imgs_input)):
