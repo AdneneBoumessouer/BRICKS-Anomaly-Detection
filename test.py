@@ -17,9 +17,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def main(
-    model_path, view, method, min_area_lc, min_area_hc, threshold_hc, localize=False
-):
+def main(model_path, view, method, min_area_lc, min_area_hc, threshold, localize=False):
     # load model and info
     model, info, _ = utils.load_model_HDF5(model_path)
     input_dir = info["data"]["input_directory"]
@@ -61,13 +59,14 @@ def main(
     resmaps_test = RC_test.get_resmaps()
 
     # instantiate detectors
-    detector_lc = detection.LowContrastAnomalyDetector(vmin=0.1, vmax=0.30)
-    detector_hc = detection.HighContrastAnomalyDetector(vmin=0.30, vmax=1.0)
+    detector_lc = detection.LowContrastAnomalyDetector()
+    detector_hc = detection.HighContrastAnomalyDetector()
 
     # set estimated detector parameters from validation
     detector_lc.set_min_area(min_area_lc)
+    detector_lc.set_threshold(threshold)
     detector_hc.set_min_area(min_area_hc)
-    detector_hc.set_threshold(threshold_hc)
+    detector_hc.set_threshold(threshold)
 
     # predict
     y_pred_lc, anomaly_maps_lc = detector_lc.predict(resmaps_test)
@@ -88,12 +87,12 @@ def main(
     test_params = {
         "method": method,
         "LowContrastAnomalyDetector": {
-            "min_area": min_area_lc,
-            # "threshold": threshold_lc,
+            "min_area": detector_lc.min_area,
+            "threshold": detector_lc.threshold,
         },
         "HighContrastAnomalyDetector": {
-            "min_area": min_area_hc,
-            "threshold": threshold_hc,
+            "min_area": detector_hc.min_area,
+            "threshold": detector_hc.threshold,
         },
         # "TPR": float(tpr),
         # "TNR": float(tnr),
@@ -119,9 +118,9 @@ def main(
         f.write(df_clf.to_string(header=True, index=True))
 
     # get and save classification stats
-    df_stats_cb = utils.get_stats(df_clf, detector_type="cb")
-    df_stats_lc = utils.get_stats(df_clf, detector_type="lc")
-    df_stats_hc = utils.get_stats(df_clf, detector_type="hc")
+    df_stats_cb = utils.get_stats(df_clf, detection_type="combined")
+    df_stats_lc = utils.get_stats(df_clf, detection_type="lc")
+    df_stats_hc = utils.get_stats(df_clf, detection_type="hc")
 
     os.makedirs(os.path.join(save_dir, "stats"), exist_ok=True)
 
@@ -215,8 +214,8 @@ if __name__ == "__main__":
         help="minimum area parameter for High Contrast Anomaly Detection Pipeline",
     )
     parser.add_argument(
-        "-thc",
-        "--threshold_hc",
+        "-th",
+        "--threshold",
         type=float,
         required=True,
         metavar="",
@@ -237,10 +236,10 @@ if __name__ == "__main__":
         method=args.method,
         min_area_lc=args.min_area_lc,
         min_area_hc=args.min_area_hc,
-        threshold_hc=args.threshold_hc,
+        threshold=args.threshold,
         localize=args.localize,
     )
 
 # Examples of command to initiate testing
-# python3 test.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a00 -m l2 -alc 89 -ahc 50 -thc 0.2 -loc
-# python3 test.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a45 -m l2 -alc 67 -ahc 20 -thc 0.206 -loc
+# python3 test.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a00 -m l2 -alc 89 -ahc 50 -th 0.2 -loc
+# python3 test.py -p saved_models/test_local_2/inceptionCAE_b8_e119.hdf5 -v a45 -m l2 -alc 67 -ahc 20 -th 0.206 -loc

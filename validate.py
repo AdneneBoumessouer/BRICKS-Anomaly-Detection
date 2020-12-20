@@ -53,20 +53,23 @@ def main(model_path, view, method, min_area_hc):
     )
     resmaps_val = RC_val.get_resmaps()
 
-    # instantiate detectors
-    detector_lc = detection.LowContrastAnomalyDetector(vmin=0.1, vmax=0.30)
-    detector_hc = detection.HighContrastAnomalyDetector(vmin=0.30, vmax=1.0)
+    # estimate threshold for high contrast anomalies
+    detector_hc = detection.HighContrastAnomalyDetector()
+    threshold_hc = detector_hc.estimate_threshold(resmaps_val, min_area_hc)
 
-    # fit detectors
-    min_area_lc = detector_lc.estimate_area(resmaps_val)
-    threshold_hc = detector_hc.estimate_threshold(resmaps_val, min_area=min_area_hc)
+    # estimate area for low contrast anomalies
+    detector_lc = detection.LowContrastAnomalyDetector()
+    min_area_lc = detector_lc.estimate_area(resmaps_val, threshold_hc)
 
     # save validation results
     validation_result = {
-        "LowContrastAnomalyDetector": {"min_area_lc": min_area_lc},
         "HighContrastAnomalyDetector": {
-            "min_area_hc": min_area_hc,
-            "threshold_hc": threshold_hc,
+            "min_area_hc": detector_hc.min_area,
+            "threshold_hc": detector_hc.threshold,
+        },
+        "LowContrastAnomalyDetector": {
+            "min_area_lc": detector_lc.min_area,
+            "threshold_lc": detector_lc.threshold,
         },
     }
     print(validation_result)

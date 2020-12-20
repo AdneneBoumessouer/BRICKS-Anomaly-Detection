@@ -101,12 +101,15 @@ def main(model_path, view, method):
     y_true = [0 if "good" in filename.split("/") else 1 for filename in filenames_test]
 
     # initialize finetuning dictionary
-    stats_hc = {
+    stats = {
         "min_area_hc": [],
-        "threshold_hc": [],
-        "TPR_hc": [],
-        "TNR_hc": [],
-        "score_hc": [],
+        "threshold": [],
+        "min_area_lc": [],
+        "TPR": [],
+        "FPR": [],
+        "TNR": [],
+        "FNR": [],
+        "score": [],
     }
 
     # initialize discrete min_area values
@@ -125,29 +128,49 @@ def main(model_path, view, method):
             length=80,
         )
 
-        detector_hc = detection.HighContrastAnomalyDetector(vmin=0.30, vmax=1.0)
-        threshold_hc = detector_hc.estimate_threshold(
-            resmaps_val, min_area=min_area_hc, verbose=0
-        )
+        # initialize detectors
+        detector_hc = detection.HighContrastAnomalyDetector()
+        detector_lc = detection.LowContrastAnomalyDetector()
+
+        # estimate threshold for high contrast anomalies
+        threshold = detector_hc.estimate_threshold(resmaps_val, min_area_hc, verbose=0)
+
+        # break out of loop if threshold inferior to vmin
+        if threshold < detector_lc.vmin:
+            print()
+            break
+
+        # estimate area for low contrast anomalies
+        min_area_lc = detector_lc.estimate_area(resmaps_val, threshold)
+
+        # predict
         y_pred_hc, _ = detector_hc.predict(resmaps_test)
-        tnr, _, _, tpr = confusion_matrix(y_true, y_pred_hc, normalize="true").ravel()
+        y_pred_lc, _ = detector_lc.predict(resmaps_test)
+        y_pred = list(np.array(y_pred_lc) | np.array(y_pred_hc))
+
+        # get results
+        tnr, fpr, fnr, tpr = confusion_matrix(y_true, y_pred, normalize="true").ravel()
 
         # record current results
-        stats_hc["min_area_hc"].append(int(min_area_hc))
-        stats_hc["threshold_hc"].append(float(threshold_hc))
-        stats_hc["TPR_hc"].append(float(tpr))
-        stats_hc["TNR_hc"].append((float(tnr)))
-        stats_hc["score_hc"].append(0.7 * float(tpr) + 0.3 * float(tnr))
+        stats["min_area_hc"].append(int(min_area_hc))
+        stats["threshold"].append(float(threshold))
+        stats["min_area_lc"].append(int(min_area_lc))
+        stats["TPR"].append(float(tpr))
+        stats["FPR"].append(float(fpr))
+        stats["TNR"].append(float(tnr))
+        stats["FNR"].append(float(fnr))
+        stats["score"].append(0.5 * float(tpr) + 0.5 * float(tnr))
 
     # get min_area, threshold pair corresponding to best score
-    index_best_score = np.argmax(stats_hc["score_hc"])
+    index_best_score = np.argmax(stats["score"])
 
     best_stats = {
-        "best_min_area_hc": stats_hc["min_area_hc"][index_best_score],
-        "best_threshold_hc": stats_hc["threshold_hc"][index_best_score],
-        "best_score_hc": stats_hc["score_hc"][index_best_score],
-        "best_TPR_hc": stats_hc["TPR_hc"][index_best_score],
-        "best_TNR_hc": stats_hc["TNR_hc"][index_best_score],
+        "best_min_area_hc": stats["min_area_hc"][index_best_score],
+        "best_threshold": stats["threshold"][index_best_score],
+        "best_min_area_lc": stats["min_area_lc"][index_best_score],
+        "best_score": stats["score"][index_best_score],
+        "best_TPR": stats["TPR"][index_best_score],
+        "best_TNR": stats["TNR"][index_best_score],
         "method": method,
     }
 
@@ -156,52 +179,62 @@ def main(model_path, view, method):
     save_dir = os.path.join(os.path.dirname(model_path), "finetuning", method, view)
     os.makedirs(save_dir, exist_ok=True)
 
-    pd.DataFrame.from_dict(stats_hc).to_pickle(os.path.join(save_dir, "df_stats.pkl"))
+    pd.DataFrame.from_dict(stats).to_pickle(os.path.join(save_dir, "df_stats.pkl"))
     with open(os.path.join(save_dir, "best_stats.json"), "w") as json_file:
         json.dump(best_stats, json_file, indent=4, sort_keys=False)
 
     # save finetuning plots
-    fig = plot_stats(stats_hc, index_best_score=index_best_score)
-    fig.savefig(os.path.join(save_dir, "stats_hc.png"))
+    fig1 = plot_stats(stats, index_best_score=index_best_score)
+    fig1.savefig(os.path.join(save_dir, "stats.png"))
+    fig2 = plot_roc(stats)
+    fig2.savefig(os.path.join(save_dir, "roc.png"))
     plt.close("all")
     return
 
 
-def plot_stats(stats_hc, index_best_score):
+def plot_stats(stats, index_best_score):
     with plt.style.context("seaborn-darkgrid"):
         # plot min_area vs. threshold
         fig, axarr = plt.subplots(nrows=2, ncols=1, figsize=(16, 9))
-        axarr[0].plot(stats_hc["min_area_hc"], stats_hc["threshold_hc"])
+        axarr[0].plot(stats["min_area_hc"], stats["threshold"])
         axarr[0].set_xlabel("min areas_hc")
         axarr[0].set_ylabel("thresholds_hc")
         # plot best (mon_area, threshold) pair
-        x = stats_hc["min_area_hc"][index_best_score]
-        y = stats_hc["threshold_hc"][index_best_score]
+        x = stats["min_area_hc"][index_best_score]
+        y = stats["threshold"][index_best_score]
         axarr[0].axvline(x, 0, y, linestyle="dashed", color="red", linewidth=0.5)
         axarr[0].axhline(y, 0, x, linestyle="dashed", color="red", linewidth=0.5)
         label_marker = "best min_area / threshold pair"
         axarr[0].plot(x, y, markersize=5, marker="o", color="red", label=label_marker)
         axarr[0].set_title(
-            "min_area_hc vs. threshold_hc\nbest min_area_hc = {} | best threshold_hc = {:.4f}".format(
+            "min_area_hc vs. threshold\nbest min_area_hc = {} | best threshold = {:.4f}".format(
                 x, y
             )
         )
-        # plot stats_hc
-        axarr[1].plot(stats_hc["min_area_hc"], stats_hc["TPR_hc"], label="TPR_hc")
-        axarr[1].plot(stats_hc["min_area_hc"], stats_hc["TNR_hc"], label="TNR_hc")
-        axarr[1].plot(stats_hc["min_area_hc"], stats_hc["score_hc"], label="score_hc")
+        # plot stats
+        axarr[1].plot(stats["min_area_hc"], stats["TPR"], label="TPR")
+        axarr[1].plot(stats["min_area_hc"], stats["TNR"], label="TNR")
+        axarr[1].plot(stats["min_area_hc"], stats["score"], label="score")
         axarr[1].set_xlabel("min areas_hc")
-        axarr[1].set_ylabel("stats_hc")
-        # plot best stats_hc
-        x = stats_hc["min_area_hc"][index_best_score]
-        y = stats_hc["score_hc"][index_best_score]
+        axarr[1].set_ylabel("stats")
+        # plot best stats
+        x = stats["min_area_hc"][index_best_score]
+        y = stats["score"][index_best_score]
         axarr[1].axvline(x, 0, 1, linestyle="dashed", color="red", linewidth=0.5)
-        axarr[1].plot(
-            x, y, markersize=5, marker="o", color="red", label="best score_hc"
-        )
+        axarr[1].plot(x, y, markersize=5, marker="o", color="red", label="best score")
         axarr[1].set_title(f"Stats Plot\nbest score = {y:.2E}")
         axarr[1].legend()
         plt.tight_layout()
+    return fig
+
+
+def plot_roc(stats):
+    with plt.style.context("seaborn-darkgrid"):
+        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 8))
+        ax.plot(stats["FPR"], stats["TPR"])
+        ax.set_xlabel("FPR")
+        ax.set_ylabel("TPR")
+        ax.set_title("ROC Curve")
     return fig
 
 

@@ -4,7 +4,7 @@ import tensorflow as tf
 from processing.utils import printProgressBar, is_rgb
 from skimage.metrics import structural_similarity
 from skimage.util import img_as_ubyte
-from skimage.color import rgb2gray
+from skimage.color import rgb2gray, rgb2hsv
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -78,6 +78,8 @@ def calculate_resmaps(imgs_input, imgs_pred, color_out, method):
         resmaps = resmaps_l2(imgs_input, imgs_pred)
     elif method == "combined":
         resmaps = resmaps_combined(imgs_input, imgs_pred)
+    elif method == "hsv":
+        resmaps = resmaps_hsv(imgs_input, imgs_pred)
     return resmaps
 
 
@@ -99,14 +101,13 @@ def resmaps_ssim(imgs_input, imgs_pred):
             img_pred,
             win_size=11,
             gaussian_weights=True,
-            multichannel=multichannel,  # True
+            multichannel=multichannel,
             sigma=1.5,
             full=True,
         )
         resmaps[index] = 1 - resmap
         scores.append(score)
     resmaps = np.clip(resmaps, a_min=-1, a_max=1)
-    # scores = np.array(scores)
     return resmaps
 
 
@@ -128,3 +129,14 @@ def resmaps_combined(imgs_input, imgs_pred):
     )
     resmaps = np.clip(resmaps, a_min=0.0, a_max=1.0)
     return resmaps
+
+
+def resmaps_hsv(imgs_input, imgs_pred):
+    """
+    Converts L2 difference of input and reconstructions from RGB to HSV colorspace,
+    and returns third channel (value-channel).
+    """
+    res_l2 = (imgs_input - imgs_pred) ** 2
+    res_hsv = np.array([rgb2hsv(resmap) for resmap in res_l2])
+    res_hsv_value = res_hsv[:, :, :, 2]
+    return res_hsv_value

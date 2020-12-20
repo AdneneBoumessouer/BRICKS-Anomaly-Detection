@@ -29,7 +29,7 @@ def generate_labeled_imgs(
     for estimating threshold.
     """
     # initialize thresholds
-    th_min = 0.1
+    th_min = 0.1 # np.amin(resmap) + th_step
     th_step = 2e-3
     th_max = np.amax(resmap) + th_step
     ths = np.arange(start=th_min, stop=th_max, step=th_step, dtype="float")
@@ -152,8 +152,7 @@ def main(model_path, method, subset, view):
         save_dir = os.path.join(
             os.path.dirname(model_path), "labeling", method, subset, view, filename
         )
-        if not (os.path.exists(save_dir) and os.path.isdir(save_dir)):
-            os.makedirs(save_dir)
+        os.makedirs(save_dir, exist_ok=True))
         # generate and save labeled resmaps for increasing thresholds
         generate_labeled_imgs(resmap, filename, min_area_plot=5, save_dir=save_dir)
     return
