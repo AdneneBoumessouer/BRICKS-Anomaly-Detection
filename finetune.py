@@ -234,6 +234,8 @@ def plot_roc(stats):
         ax.plot(stats["FPR"], stats["TPR"])
         ax.set_xlabel("FPR")
         ax.set_ylabel("TPR")
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
         ax.set_title("ROC Curve")
     return fig
 
@@ -261,7 +263,7 @@ if __name__ == "__main__":
         type=str,
         required=False,
         metavar="",
-        choices=["ssim", "l1", "l2", "combined"],
+        choices=["ssim", "l1", "l2", "combined", "hsv"],
         default="l1",
         help="method used to compute resmaps",
     )
