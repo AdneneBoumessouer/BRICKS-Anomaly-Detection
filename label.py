@@ -140,7 +140,7 @@ def main(model_path, method, subset, view):
     imgs_input = generator.next()[0][arr_i]
     imgs_pred = model.predict(imgs_input)
 
-    RC_val = ResmapCalculator(
+    res_calc = ResmapCalculator(
         imgs_input=imgs_input,
         imgs_pred=imgs_pred,
         color_out="rgb",  # grayscale
@@ -149,7 +149,7 @@ def main(model_path, method, subset, view):
         vmin=vmin,
         vmax=vmax,
     )
-    resmaps = RC_val.get_resmaps()
+    resmaps = res_calc.get_resmaps()
 
     for resmap, filename in list(zip(resmaps, filenames)):
         # create save dir

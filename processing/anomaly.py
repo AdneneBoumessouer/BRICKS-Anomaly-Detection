@@ -8,16 +8,10 @@ class AnomalyMap:
     "Object to store a labeled image and corresponding anomalies"
 
     def __init__(self, labeled, regionprops):
-        self.labeled = labeled
+        # filtered labeled image
+        self.labeled = filter_labeled(labeled, regionprops)
+        # only defective regionprops
         self.regionprops = regionprops
-
-    def remove_unsued_labels_from_labeled(self):
-        labels_to_keep = [regionprop.label for regionprop in self.regionprops]
-        labeled_fil = np.zeros_like(self.labeled)
-        for label in labels_to_keep:
-            labeled_fil[self.labeled == label] = label
-        self.labeled = labeled_fil
-        return
 
     def get_labeled_with_alpha(self, alpha_bg=0.3):
         h, w = self.labeled.shape
@@ -28,6 +22,14 @@ class AnomalyMap:
         labeled_alpha[:, :, :3] = labeled_rgb
         labeled_alpha[:, :, -1][self.labeled == 0] = alpha_bg
         return labeled_alpha
+
+
+def filter_labeled(labeled, regionprops):
+    labels_to_keep = [regionprop.label for regionprop in regionprops]
+    labeled_fil = np.zeros_like(labeled)
+    for label in labels_to_keep:
+        labeled_fil[labeled == label] = label
+    return labeled_fil
 
 
 def generate_anomaly_localization_figure(
@@ -56,6 +58,7 @@ def generate_anomaly_localization_figure(
     if anomap_lc:
         labeled_alpha = anomap_lc.get_labeled_with_alpha(alpha_bg=0.4)
         axarr[1, 1].imshow(labeled_alpha, alpha=0.7)
+        axarr[1, 1].set_axis_off()
         for regionprop in anomap_lc.regionprops:
             minr, minc, maxr, maxc = regionprop.bbox
             rect = mpatches.Rectangle(
@@ -77,7 +80,6 @@ def generate_anomaly_localization_figure(
                 fontweight="bold",
                 fontsize=10,
             )
-            axarr[1, 1].set_axis_off()
     axarr[1, 1].set_title("Low Contrast Anomalies")
     axarr[1, 1].set_axis_off()
 
@@ -85,6 +87,7 @@ def generate_anomaly_localization_figure(
     if anomap_hc:
         labeled_alpha = anomap_hc.get_labeled_with_alpha(alpha_bg=0.4)
         axarr[1, 2].imshow(labeled_alpha, alpha=0.7)
+        axarr[1, 2].set_axis_off()
         for regionprop in anomap_hc.regionprops:
             minr, minc, maxr, maxc = regionprop.bbox
             rect = mpatches.Rectangle(
@@ -106,7 +109,6 @@ def generate_anomaly_localization_figure(
                 fontweight="bold",
                 fontsize=10,
             )
-            axarr[1, 2].set_axis_off()
     axarr[1, 2].set_title("High Contrast Anomalies")
     axarr[1, 2].set_axis_off()
     plt.tight_layout()

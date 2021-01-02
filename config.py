@@ -30,7 +30,7 @@ FILENAMES_VAL_INSPECTION = [
     "good/a45_303.png",
 ]
 
-# Filenames of test images used for inspection
+# # Filenames of test images used for inspection
 # FILENAMES_TEST_INSPECTION = [
 #     "good/a00_008.png",
 #     # "good/a00_188.png",
@@ -64,7 +64,7 @@ FILENAMES_VAL_INSPECTION = [
 #     # "07_fracture/a00_358.png",
 #     "07_fracture/a45_315.png",
 #     # "07_fracture/a45_360.png",
-#     # "08_scratch/a00_090.png",
+#     "08_scratch/a00_090.png",
 #     # "08_scratch/a00_133.png",
 #     # "08_scratch/a45_197.png",
 #     # "08_scratch/a45_136.png",
@@ -78,7 +78,36 @@ FILENAMES_VAL_INSPECTION = [
 #     "10_stain/a45_225.png",
 # ]
 
-FILENAMES_TEST_INSPECTION = ["03_missing/a45_037.png"]
+FILENAMES_TEST_INSPECTION = [
+    # High Contrast & Large Area
+    "03_missing/a00_089.png",  # 0
+    "03_missing/a45_001.png",  # 1
+    "10_stain/a00_224.png",  # 2
+    "10_stain/a45_225.png",  # 3
+    # High Contrast & Small Area
+    # detected
+    "09_hole/a00_224.png",  # 4
+    "09_hole/a45_224.png",  # 5
+    # undetected
+    "07_fracture/a45_315.png",  # 6
+    "09_hole/a00_209.png",  # 7
+    "09_hole/a45_200.png",  # 8
+    "10_stain/a00_157.png",  # 9
+    "10_stain/a45_168.png",  # 10
+    # Low Contrast & Large Area
+    "02_added/a00_001.png",  # 11
+    "02_added/a45_001.png",  # 12
+    "03_missing/a45_041.png",  # 13
+    "05_color/a00_272.png",  # 14
+    "05_color/a45_001.png",  # 15
+    # Low Contrast & Small Area
+    "06_crack/a00_012.png",  # 16
+    "06_crack/a45_315.png",  # 17
+    "08_scratch/a00_136.png",  # 18
+    "08_scratch/a45_136.png",  # 19
+]
+
+# FILENAMES_TEST_INSPECTION = ["03_missing/a45_037.png"]
 
 # VALIDATION PARAMETERS ---------------------------------------------------
 MIN_AREA_VAL_a00 = 25

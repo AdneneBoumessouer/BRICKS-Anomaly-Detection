@@ -82,7 +82,7 @@ class HighContrastAnomalyDetector:
             # append defective labeled image and its properties
             if is_defective:
                 anomaly_map = AnomalyMap(labeled, regionprops=props)
-                anomaly_map.remove_unsued_labels_from_labeled()
+                # anomaly_map.remove_unsued_labels_from_labeled()
                 anomaly_maps.append(anomaly_map)
             else:
                 anomaly_maps.append(None)
@@ -149,7 +149,7 @@ class LowContrastAnomalyDetector:
             # append defective labeled image and its properties
             if is_defective:
                 anomaly_map = AnomalyMap(labeled, regionprops=props)
-                anomaly_map.remove_unsued_labels_from_labeled()
+                # anomaly_map.remove_unsued_labels_from_labeled()
                 anomaly_maps.append(anomaly_map)
             else:
                 anomaly_maps.append(None)
