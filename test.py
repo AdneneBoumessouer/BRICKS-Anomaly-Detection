@@ -33,15 +33,16 @@ def main(model_path, view, method, min_area_lc, min_area_hc, threshold, localize
     )
 
     # get test generator
-    nb_test_images = preprocessor.get_total_number_test_images()
-    test_generator = preprocessor.get_test_generator(
-        batch_size=nb_test_images, shuffle=False
-    )
+    test_generator = preprocessor.get_test_generator()
+    mask_generator = preprocessor.get_mask_generator()
 
     # retrieve test images
     index_array, filenames_test = utils.get_indices(test_generator, view)
     categories = [filename.split("/")[0] for filename in filenames_test]
     imgs_test_input = test_generator._get_batches_of_transformed_samples(index_array)[0]
+    masks = mask_generator._get_batches_of_transformed_samples(index_array)[0][
+        :, :, :, 0
+    ]
 
     # reconstruct validation inspection images (i.e predict)
     imgs_test_pred = model.predict(imgs_test_input)
@@ -50,7 +51,7 @@ def main(model_path, view, method, min_area_lc, min_area_hc, threshold, localize
     RC_test = resmaps.ResmapCalculator(
         imgs_input=imgs_test_input,
         imgs_pred=imgs_test_pred,
-        color_out="rgb",  # "grayscale"
+        color_out="rgb",
         method=method,
         filenames=filenames_test,
         vmin=vmin,
@@ -156,7 +157,7 @@ def main(model_path, view, method, min_area_lc, min_area_hc, threshold, localize
                 suffix="Complete | {}".format(filenames_test[i]),
                 length=80,
             )
-            fig = anomaly.generate_anomaly_localization_figure(
+            fig1 = anomaly.generate_anomaly_localization_figure(
                 img_input=imgs_test_input[i],
                 img_pred=imgs_test_pred[i],
                 resmap=resmaps_test[i],
@@ -166,8 +167,22 @@ def main(model_path, view, method, min_area_lc, min_area_hc, threshold, localize
             )
             fname = os.path.join(save_dir, "anomaly_localization", filenames_test[i])
             os.makedirs(os.path.dirname(fname), exist_ok=True)
-            fig.savefig(fname)
-            plt.close(fig=fig)
+            fig1.savefig(fname)
+            plt.close(fig=fig1)
+
+            fig2 = anomaly.generate_segmentation_figure(
+                img_input=imgs_test_input[i],
+                img_pred=imgs_test_pred[i],
+                resmap=resmaps_test[i],
+                mask=masks[i],
+                anomap_lc=anomaly_maps_lc[i],
+                anomap_hc=anomaly_maps_hc[i],
+                filename=filenames_test[i],
+            )
+            fname = os.path.join(save_dir, "anomaly_segmentation", filenames_test[i])
+            os.makedirs(os.path.dirname(fname), exist_ok=True)
+            fig2.savefig(fname)
+            plt.close(fig=fig2)
 
 
 if __name__ == "__main__":

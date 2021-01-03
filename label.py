@@ -119,9 +119,7 @@ def main(model_path, method, subset, view):
         filenames_insp = config.FILENAMES_VAL_INSPECTION
     else:
         nb_test_images = preprocessor.get_total_number_test_images()
-        generator = preprocessor.get_test_generator(
-            batch_size=nb_test_images, shuffle=False
-        )
+        generator = preprocessor.get_test_generator()
         filenames_insp = config.FILENAMES_TEST_INSPECTION
 
     # get index array for filenames to label

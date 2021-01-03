@@ -60,7 +60,7 @@ def main(args):
         batch_size=autoencoder.batch_size, shuffle=True
     )
     validation_generator = preprocessor.get_val_generator(
-        batch_size=autoencoder.batch_size, shuffle=False, purpose="val",
+        batch_size=autoencoder.batch_size, shuffle=False
     )
 
     # find best learning rates for training

@@ -206,3 +206,10 @@ def get_stats(df_clf, detection_type="combined"):
     df_stats = pd.DataFrame.from_dict({"category": categories, "TPR": TPR, "TNR": TNR})
     return df_stats
 
+
+def get_optimal_figsize(nrows, ncols, scale=2):
+    w_a4, h_a4 = 8.3, 11.7
+    l = min(h_a4 / nrows, w_a4 / ncols)
+    figsize = (scale * ncols * l, scale * nrows * l)
+    return figsize
+
