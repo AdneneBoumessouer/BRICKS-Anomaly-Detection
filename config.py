@@ -7,6 +7,35 @@ BRIGHTNESS_RANGE = [0.95, 1.05]
 ZOOM_RANGE = [0.9, 1.05]
 CHANNEL_SHIFT_RANGE = 0.05
 
+train_datagen_args = dict(
+    featurewise_center=False,
+    samplewise_center=False,
+    featurewise_std_normalization=False,
+    samplewise_std_normalization=False,
+    zca_whitening=False,
+    zca_epsilon=1e-6,
+    rotation_range=ROT_ANGLE,
+    width_shift_range=W_SHIFT_RANGE,
+    height_shift_range=H_SHIFT_RANGE,
+    brightness_range=BRIGHTNESS_RANGE,
+    shear_range=0.0,
+    zoom_range=ZOOM_RANGE,
+    channel_shift_range=CHANNEL_SHIFT_RANGE,
+    fill_mode="nearest",
+    cval=0.0,
+    horizontal_flip=False,
+    vertical_flip=False,
+    rescale=1 / 255,
+    preprocessing_function=None,
+    data_format="channels_last",
+    validation_split=0.0,
+    dtype="float32",
+)
+
+val_test_datagen_args = dict(
+    rescale=1 / 255, data_format="channels_last", preprocessing_function=None,
+)
+
 # Learning Rate Finder parameters
 START_LR = 1e-6
 LR_MAX_EPOCHS = 10
@@ -14,6 +43,12 @@ LRF_DECREASE_FACTOR = 0.85
 
 # Path to save model
 saved_models_path = "saved_models/run_0_arch"
+
+# FINETUNING PARAMETERS ---------------------------------------------------
+START_MIN_AREA_HC = 5
+STEP_MIN_AREA_HC = 5
+STOP_MIN_AREA_HC = 200
+
 
 # INSPECTION PARAMETERS -----------------------------------
 # Filenames of validation images used for inspection
@@ -107,29 +142,3 @@ FILENAMES_TEST_INSPECTION = [
     "08_scratch/a45_136.png",  # 19
 ]
 
-# FILENAMES_TEST_INSPECTION = ["03_missing/a45_037.png"]
-
-# VALIDATION PARAMETERS ---------------------------------------------------
-MIN_AREA_VAL_a00 = 25
-MIN_AREA_VAL_a45 = 25
-
-# TEST PARAMETERS ---------------------------------------------------------
-MIN_AREA_TEST_a00 = 25
-THRESHOLD_TEST_a00 = 0.5950040829181671
-
-MIN_AREA_TEST_a45 = 25
-THRESHOLD_TEST_a00 = 0.3950000596046448
-
-# FINETUNING PARAMETERS ---------------------------------------------------
-FINETUNE_SPLIT = 0.1
-STEP_MIN_AREA = 5
-START_MIN_AREA = 5
-STOP_MIN_AREA = 1005
-
-LOW_CONTRAST_MIN_PIXEL_INTENSITY = 0.05
-LOW_CONTRAST_MAX_PIXEL_INTENSITY = 0.2
-LOW_CONTRAST_STEP_PIXEL_INTENSITY = 2e-3
-
-HIGH_CONTRAST_MIN_PIXEL_INTENSITY = 0.2
-HIGH_CONTRAST_MAX_PIXEL_INTENSITY = 1.0
-HIGH_CONTRAST_STEP_PIXEL_INTENSITY = 2e-3

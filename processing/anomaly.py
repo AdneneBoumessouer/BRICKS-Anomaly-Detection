@@ -2,6 +2,8 @@ from skimage import color
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from processing import utils
+from skimage import util
 
 
 class AnomalyMap:
@@ -32,11 +34,33 @@ def filter_labeled(labeled, regionprops):
     return labeled_fil
 
 
+def get_labeled_with_alpha(labeled, colors=["red"], alpha_bg=0.3):
+    h, w = labeled.shape
+    # transform labeled image to rgb image
+    labeled_rgb = color.label2rgb(labeled, colors=colors, bg_label=0, bg_color=None)
+    # add alpha channel to rgb labeled image
+    labeled_alpha = np.ones(shape=(h, w, 4), dtype=labeled_rgb.dtype)
+    labeled_alpha[:, :, :3] = labeled_rgb
+    labeled_alpha[:, :, -1][labeled == 0] = alpha_bg
+    return labeled_alpha
+
+
+def merge_labeled(anomap_lc, anomap_hc, shape=(256, 256)):
+    labeled_merged = np.zeros(shape, dtype="int64")
+    if anomap_lc:
+        labeled_merged[anomap_lc.labeled > 0] = 1
+    if anomap_hc:
+        labeled_merged[anomap_hc.labeled > 0] = 2
+    return labeled_merged
+
+
 def generate_anomaly_localization_figure(
     img_input, img_pred, resmap, anomap_lc, anomap_hc, filename
 ):
+    nrows, ncols = 2, 3
+    figsize = utils.get_optimal_figsize(nrows, ncols)
 
-    fig, axarr = plt.subplots(nrows=2, ncols=3, figsize=(25, 15))
+    fig, axarr = plt.subplots(nrows, ncols, figsize=figsize)
     fig.suptitle(filename, fontsize=20)
 
     axarr[0, 0].imshow(img_input)
@@ -55,6 +79,8 @@ def generate_anomaly_localization_figure(
     fig.colorbar(res, ax=axarr[1, 0])
 
     axarr[1, 1].imshow(img_input)
+    axarr[1, 1].set_title("Low Contrast Anomalies")
+    axarr[1, 1].set_axis_off()
     if anomap_lc:
         labeled_alpha = anomap_lc.get_labeled_with_alpha(alpha_bg=0.4)
         axarr[1, 1].imshow(labeled_alpha, alpha=0.7)
@@ -80,10 +106,10 @@ def generate_anomaly_localization_figure(
                 fontweight="bold",
                 fontsize=10,
             )
-    axarr[1, 1].set_title("Low Contrast Anomalies")
-    axarr[1, 1].set_axis_off()
 
     axarr[1, 2].imshow(img_input)
+    axarr[1, 2].set_title("High Contrast Anomalies")
+    axarr[1, 2].set_axis_off()
     if anomap_hc:
         labeled_alpha = anomap_hc.get_labeled_with_alpha(alpha_bg=0.4)
         axarr[1, 2].imshow(labeled_alpha, alpha=0.7)
@@ -109,9 +135,86 @@ def generate_anomaly_localization_figure(
                 fontweight="bold",
                 fontsize=10,
             )
-    axarr[1, 2].set_title("High Contrast Anomalies")
-    axarr[1, 2].set_axis_off()
+
     plt.tight_layout()
 
     return fig
 
+
+def generate_segmentation_figure(
+    img_input, img_pred, resmap, mask, anomap_lc, anomap_hc, filename
+):
+
+    nrows, ncols = 2, 3
+    figsize = utils.get_optimal_figsize(nrows, ncols)
+
+    fig, axarr = plt.subplots(nrows, ncols, figsize=figsize)
+    fig.suptitle(filename, fontsize=20)
+
+    axarr[0, 0].imshow(img_input)
+    axarr[0, 0].set_title("input")
+    axarr[0, 0].set_axis_off()
+
+    axarr[0, 1].imshow(img_pred)
+    axarr[0, 1].set_title("Reconstruction")
+    axarr[0, 1].set_axis_off()
+    axarr[0, 2].set_axis_off()
+
+    res = axarr[1, 0].imshow(resmap, cmap="inferno", vmin=0.0, vmax=1.0)
+    axarr[1, 0].set_title("Resmap")
+    axarr[1, 0].set_axis_off()
+    fig.colorbar(res, ax=axarr[1, 0])
+
+    axarr[1, 1].imshow(img_input)
+    axarr[1, 1].set_axis_off()
+    axarr[1, 1].set_title("Anomaly Map")
+
+    axarr[1, 2].imshow(mask, cmap="gray")
+    axarr[1, 2].set_axis_off()
+    title = "Segmentation Map"
+
+    if anomap_lc or anomap_hc:
+        colors = []
+        if anomap_lc:
+            colors.append("yellow")
+        if anomap_hc:
+            colors.append("red")
+        labeled_merged = merge_labeled(anomap_lc, anomap_hc)
+        labeled_alpha_anomap = get_labeled_with_alpha(
+            labeled_merged, colors=colors, alpha_bg=0.4
+        )
+        labeled_alpha_mask = get_labeled_with_alpha(
+            labeled_merged, colors=colors, alpha_bg=0.0
+        )
+        axarr[1, 1].imshow(labeled_alpha_anomap, alpha=0.7)
+        axarr[1, 2].imshow(labeled_alpha_mask, alpha=0.7)
+
+        # compute IoU
+        mask_pred = labeled_merged > 0
+        IoU = calculate_IoU(mask, mask_pred)
+        title = title + "\nIoU = {:.3f}".format(IoU)
+
+    axarr[1, 2].set_title(title)
+
+    plt.tight_layout()
+    return fig
+
+
+def calculate_IoU(mask_true, mask_pred):
+    # convert inputs to boolean type if necessary
+    if not mask_true.dtype == np.dtype("bool"):
+        mask_true = util.img_as_bool(mask_true)
+    if not mask_pred.dtype == np.dtype("bool"):
+        mask_pred = util.img_as_bool(mask_pred)
+    # initialize masks
+    mask_inter = np.zeros(shape=mask_true.shape, dtype="bool")
+    mask_union = np.zeros(shape=mask_true.shape, dtype="bool")
+    # compute intersection and union masks
+    mask_inter[(mask_true == True) & (mask_pred == True)] = True
+    mask_union[(mask_true == True) | (mask_pred == True)] = True
+    # compute IoU: Intersection over Union
+    if np.count_nonzero(mask_union) == 0:
+        IoU = 0.0
+    else:
+        IoU = np.count_nonzero(mask_inter) / np.count_nonzero(mask_union)
+    return IoU

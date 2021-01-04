@@ -10,15 +10,12 @@ from processing.preprocessing import Preprocessor
 from processing import detection
 from processing.utils import printProgressBar
 from sklearn.metrics import confusion_matrix
+import config
 
 import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-START_MIN_AREA_HC = 5
-STEP_MIN_AREA_HC = 5
-STOP_MIN_AREA_HC = 200
 
 
 def main(model_path, view, method):
@@ -114,7 +111,9 @@ def main(model_path, view, method):
 
     # initialize discrete min_area values
     min_areas_hc = np.arange(
-        start=START_MIN_AREA_HC, stop=STOP_MIN_AREA_HC, step=STEP_MIN_AREA_HC
+        start=config.START_MIN_AREA_HC,
+        stop=config.STOP_MIN_AREA_HC,
+        step=config.STEP_MIN_AREA_HC,
     )
     n = len(min_areas_hc)
     printProgressBar(0, n, prefix="Progress:", suffix="Complete", length=80)
