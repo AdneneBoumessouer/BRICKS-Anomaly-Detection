@@ -182,9 +182,13 @@ def generate_segmentation_figure(
     axarr[1, 1].set_axis_off()
     axarr[1, 1].set_title("Anomaly Map")
 
+    # compute IoU
+    mask_pred = anomap_lc.get_mask() | anomap_hc.get_mask()
+    IoU = calculate_IoU(mask_true, mask_pred)
+
     axarr[1, 2].imshow(mask_true, cmap="gray")
+    axarr[1, 2].set_title("Segmentation Map\nIoU = {:.3f}".format(IoU))
     axarr[1, 2].set_axis_off()
-    title = "Segmentation Map"
 
     if anomap_lc or anomap_hc:
         colors = []
@@ -201,13 +205,6 @@ def generate_segmentation_figure(
         )
         axarr[1, 1].imshow(labeled_alpha_anomap, alpha=0.7)
         axarr[1, 2].imshow(labeled_alpha_mask, alpha=0.7)
-
-        # compute IoU
-        mask_pred = labeled_merged > 0
-        IoU = calculate_IoU(mask_true, mask_pred)
-        title = title + "\nIoU = {:.3f}".format(IoU)
-
-    axarr[1, 2].set_title(title)
 
     plt.tight_layout()
     return fig

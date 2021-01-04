@@ -140,5 +140,8 @@ FILENAMES_TEST_INSPECTION = [
     "06_crack/a45_315.png",  # 17
     "08_scratch/a00_136.png",  # 18
     "08_scratch/a45_136.png",  # 19
+    # Anomaly Free
+    "good/a00_008.png",
+    "good/a45_008.png",
 ]
 
