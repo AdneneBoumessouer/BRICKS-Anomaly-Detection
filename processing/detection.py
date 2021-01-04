@@ -1,5 +1,5 @@
 import numpy as np
-from processing.anomaly import AnomalyMap
+from processing import anomaly
 from processing.utils import printProgressBar
 from skimage import measure, morphology
 
@@ -80,11 +80,8 @@ class HighContrastAnomalyDetector:
             # append prediction
             predictions.append(is_defective)
             # append defective labeled image and its properties
-            if is_defective:
-                anomaly_map = AnomalyMap(labeled, regionprops=props)
-                anomaly_maps.append(anomaly_map)
-            else:
-                anomaly_maps.append(None)
+            labeled = anomaly.filter_labeled(labeled, props)
+            anomaly_maps.append(anomaly.AnomalyMap(labeled, regionprops=props))
         return predictions, anomaly_maps
 
 
@@ -145,10 +142,7 @@ class LowContrastAnomalyDetector:
             # append prediction
             predictions.append(is_defective)
             # append defective labeled image and its properties
-            if is_defective:
-                anomaly_map = AnomalyMap(labeled, regionprops=props)
-                anomaly_maps.append(anomaly_map)
-            else:
-                anomaly_maps.append(None)
+            labeled = anomaly.filter_labeled(labeled, props)
+            anomaly_maps.append(anomaly.AnomalyMap(labeled, regionprops=props))
         return predictions, anomaly_maps
 

@@ -11,9 +11,18 @@ class AnomalyMap:
 
     def __init__(self, labeled, regionprops):
         # filtered labeled image
-        self.labeled = filter_labeled(labeled, regionprops)
+        self.labeled = labeled
         # only defective regionprops
         self.regionprops = regionprops
+
+    def __bool__(self):
+        if self.regionprops:
+            return True
+        return False
+
+    def get_mask(self):
+        mask = self.labeled > 0
+        return mask
 
     def get_labeled_with_alpha(self, alpha_bg=0.3):
         h, w = self.labeled.shape
@@ -27,10 +36,14 @@ class AnomalyMap:
 
 
 def filter_labeled(labeled, regionprops):
-    labels_to_keep = [regionprop.label for regionprop in regionprops]
+    """
+    retains labeled pixels in @param:labeled which labels are contained in regionprops.
+    """
     labeled_fil = np.zeros_like(labeled)
-    for label in labels_to_keep:
-        labeled_fil[labeled == label] = label
+    if regionprops:
+        labels_to_keep = [regionprop.label for regionprop in regionprops]
+        for label in labels_to_keep:
+            labeled_fil[labeled == label] = label
     return labeled_fil
 
 
@@ -142,7 +155,7 @@ def generate_anomaly_localization_figure(
 
 
 def generate_segmentation_figure(
-    img_input, img_pred, resmap, mask, anomap_lc, anomap_hc, filename
+    img_input, img_pred, resmap, mask_true, anomap_lc, anomap_hc, filename
 ):
 
     nrows, ncols = 2, 3
@@ -169,7 +182,7 @@ def generate_segmentation_figure(
     axarr[1, 1].set_axis_off()
     axarr[1, 1].set_title("Anomaly Map")
 
-    axarr[1, 2].imshow(mask, cmap="gray")
+    axarr[1, 2].imshow(mask_true, cmap="gray")
     axarr[1, 2].set_axis_off()
     title = "Segmentation Map"
 
@@ -191,7 +204,7 @@ def generate_segmentation_figure(
 
         # compute IoU
         mask_pred = labeled_merged > 0
-        IoU = calculate_IoU(mask, mask_pred)
+        IoU = calculate_IoU(mask_true, mask_pred)
         title = title + "\nIoU = {:.3f}".format(IoU)
 
     axarr[1, 2].set_title(title)
@@ -214,7 +227,7 @@ def calculate_IoU(mask_true, mask_pred):
     mask_union[(mask_true == True) | (mask_pred == True)] = True
     # compute IoU: Intersection over Union
     if np.count_nonzero(mask_union) == 0:
-        IoU = 0.0
+        IoU = 1.0
     else:
         IoU = np.count_nonzero(mask_inter) / np.count_nonzero(mask_union)
     return IoU

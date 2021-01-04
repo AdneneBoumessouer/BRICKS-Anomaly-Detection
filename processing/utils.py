@@ -166,10 +166,10 @@ def list_imgs(dirName):
     return listOfFiles
 
 
-def get_stats(df_clf, detection_type="combined"):
-    if detection_type == "combined":
+def get_stats(df_clf, detector="cb"):
+    if detector == "cb":
         y_pred = "y_pred"
-    elif detection_type == "lc":
+    elif detector == "lc":
         y_pred = "y_pred_lc"
     else:
         y_pred = "y_pred_hc"
