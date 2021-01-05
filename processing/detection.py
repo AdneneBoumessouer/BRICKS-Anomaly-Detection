@@ -44,8 +44,6 @@ class HighContrastAnomalyDetector:
             else:
                 self.threshold = th
             printProgressBar(i + 1, len(ths), length=80, verbose=verbose)
-
-        printProgressBar(len(ths), len(ths), length=80, verbose=verbose)
         return self.threshold
 
     def set_threshold(self, threshold):
@@ -79,7 +77,7 @@ class HighContrastAnomalyDetector:
                     props.append(regionprop)
             # append prediction
             predictions.append(is_defective)
-            # append defective labeled image and its properties
+            # append labeled image and its properties
             labeled = anomaly.filter_labeled(labeled, props)
             anomaly_maps.append(anomaly.AnomalyMap(labeled, regionprops=props))
         return predictions, anomaly_maps
@@ -106,7 +104,6 @@ class LowContrastAnomalyDetector:
             for labeled in imgs_labeled
             if measure.regionprops(labeled)
         ]
-        # largest_areas = compute_largest_areas(binary)
         self.min_area = int(1.15 * round(np.percentile(largest_areas, 95)))
         return self.min_area
 
@@ -141,7 +138,7 @@ class LowContrastAnomalyDetector:
                     props.append(regionprop)
             # append prediction
             predictions.append(is_defective)
-            # append defective labeled image and its properties
+            # append labeled image and its properties
             labeled = anomaly.filter_labeled(labeled, props)
             anomaly_maps.append(anomaly.AnomalyMap(labeled, regionprops=props))
         return predictions, anomaly_maps

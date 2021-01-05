@@ -183,11 +183,15 @@ def generate_segmentation_figure(
     axarr[1, 1].set_title("Anomaly Map")
 
     # compute IoU
-    mask_pred = anomap_lc.get_mask() | anomap_hc.get_mask()
-    IoU = calculate_IoU(mask_true, mask_pred)
+    if np.any(mask_true):
+        mask_pred = anomap_lc.get_mask() | anomap_hc.get_mask()
+        IoU = calculate_IoU(mask_true, mask_pred)
+        title_seg = "Segmentation Map\nIoU = {:.3f}".format(IoU)
+    else:
+        title_seg = "Segmentation Map"
 
     axarr[1, 2].imshow(mask_true, cmap="gray")
-    axarr[1, 2].set_title("Segmentation Map\nIoU = {:.3f}".format(IoU))
+    axarr[1, 2].set_title(title_seg)
     axarr[1, 2].set_axis_off()
 
     if anomap_lc or anomap_hc:
