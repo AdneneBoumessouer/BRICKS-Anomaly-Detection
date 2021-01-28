@@ -40,7 +40,7 @@ def main(model_path, view, method, min_area_lc, min_area_hc, threshold, localize
     index_array, filenames_test = utils.get_indices(test_generator, view)
     categories = [filename.split("/")[0] for filename in filenames_test]
     imgs_test_input = test_generator._get_batches_of_transformed_samples(index_array)[0]
-    masks = mask_generator._get_batches_of_transformed_samples(index_array)[0][
+    masks_true = mask_generator._get_batches_of_transformed_samples(index_array)[0][
         :, :, :, 0
     ]
 
@@ -119,9 +119,9 @@ def main(model_path, view, method, min_area_lc, min_area_hc, threshold, localize
         f.write(df_clf.to_string(header=True, index=True))
 
     # get and save classification stats
-    df_stats_cb = utils.get_stats(df_clf, detection_type="combined")
-    df_stats_lc = utils.get_stats(df_clf, detection_type="lc")
-    df_stats_hc = utils.get_stats(df_clf, detection_type="hc")
+    df_stats_cb = utils.get_stats(df_clf, detector="cb")
+    df_stats_lc = utils.get_stats(df_clf, detector="lc")
+    df_stats_hc = utils.get_stats(df_clf, detector="hc")
 
     os.makedirs(os.path.join(save_dir, "stats"), exist_ok=True)
 
@@ -174,7 +174,7 @@ def main(model_path, view, method, min_area_lc, min_area_hc, threshold, localize
                 img_input=imgs_test_input[i],
                 img_pred=imgs_test_pred[i],
                 resmap=resmaps_test[i],
-                mask=masks[i],
+                mask_true=masks_true[i],
                 anomap_lc=anomaly_maps_lc[i],
                 anomap_hc=anomaly_maps_hc[i],
                 filename=filenames_test[i],
