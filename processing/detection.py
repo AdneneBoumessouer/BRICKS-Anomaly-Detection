@@ -39,11 +39,12 @@ class HighContrastAnomalyDetector:
             if areas.size > 0:
                 largest_area = np.amax(areas)
                 if largest_area < min_area:
-                    self.threshold = th
                     break
-            else:
-                self.threshold = th
+
             printProgressBar(i + 1, len(ths), length=80, verbose=verbose)
+
+        printProgressBar(len(ths), len(ths), length=80, verbose=verbose)
+        self.threshold = th
         return self.threshold
 
     def set_threshold(self, threshold):
